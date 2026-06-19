@@ -810,6 +810,7 @@
         body.pdf-export-mode .move-handle,
         body.pdf-export-mode .delete-btn,
         body.pdf-export-mode .rotate-btn,
+        body.pdf-export-mode .manual-move-btn,
         body.pdf-export-mode .upload-label,
         body.pdf-export-mode .add-box-btn-inner,
         body.pdf-export-mode #toast-container,
@@ -854,6 +855,7 @@
             .move-handle,
             .delete-btn,
             .rotate-btn,
+            .manual-move-btn,
             .upload-label,
             .add-box-btn-inner,
             #toast-container,
@@ -882,6 +884,41 @@
                 overflow: hidden;
                 outline: none !important;
             }
+        }
+
+        /* Manual Move Arrows */
+        .manual-move-btn {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 120;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            user-select: none;
+        }
+        .manual-move-btn:hover {
+            background: #f59e0b;
+            transform: scale(1.15);
+        }
+        .manual-move-btn.move-up { top: 5px; left: 50%; transform: translateX(-50%); }
+        .manual-move-btn.move-up:hover { transform: translateX(-50%) scale(1.15); }
+        .manual-move-btn.move-down { bottom: 5px; left: 50%; transform: translateX(-50%); }
+        .manual-move-btn.move-down:hover { transform: translateX(-50%) scale(1.15); }
+        .manual-move-btn.move-left { left: 5px; top: 50%; transform: translateY(-50%); }
+        .manual-move-btn.move-left:hover { transform: translateY(-50%) scale(1.15); }
+        .manual-move-btn.move-right { right: 5px; top: 50%; transform: translateY(-50%); }
+        .manual-move-btn.move-right:hover { transform: translateY(-50%) scale(1.15); }
+        .resizable-box:not(.selected-box) .manual-move-btn {
+            display: none !important;
         }
     </style>
 </head>
@@ -1135,8 +1172,16 @@
         });
         document.getElementById('multi-file-input').addEventListener('change', function () {
             if (!this.files || this.files.length === 0) return;
-            Promise.all(Array.from(this.files).map(blobToDataURL))
-                .then(srcs => buildAutoPage(srcs));
+            const files = Array.from(this.files);
+            const selectedBox = document.querySelector('.resizable-box.selected-box');
+            if (selectedBox && files.length === 1) {
+                const img = selectedBox.querySelector('img');
+                const label = selectedBox.querySelector('.upload-label');
+                const canvasId = selectedBox.closest('.inner-border-canvas').id;
+                loadFileIntoBox(files[0], img, label, selectedBox, canvasId);
+            } else {
+                Promise.all(files.map(blobToDataURL)).then(srcs => buildAutoPage(srcs));
+            }
             this.value = ''; // Reset element
         });
 
@@ -1761,8 +1806,7 @@
             page.innerHTML = `
                 <div class="inner-border-canvas" id="${pageId}">
                     <div class="add-box-controls" data-canvas="${pageId}">
-                        <button class="add-box-btn-inner file-btn">📁 फोटो चुनें</button>
-                        <button class="add-box-btn-inner clip-btn">📋 पेस्ट करें</button>
+                        <button class="add-box-btn-inner add-container-btn">➕ Add Container</button>
                     </div>
                 </div>
                 <div class="page-label">📷 पेज — 0 फोटो</div>
@@ -1771,14 +1815,19 @@
             page.addEventListener('mousedown', function (e) { selectPage(this, e); });
             page.addEventListener('touchstart', function (e) { selectPage(this, e); });
 
-            page.querySelector('.file-btn').addEventListener('click', (e) => {
+            page.querySelector('.add-container-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
-                openFilePicker(pageId);
-            });
-
-            page.querySelector('.clip-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                pasteFromClipboard(pageId);
+                const canvas = document.getElementById(pageId);
+                const existingCount = canvas ? canvas.querySelectorAll('.resizable-box').length : 0;
+                const cascade = (existingCount % 6) * 20;
+                snapshotState();
+                addBoxWithData(pageId, {
+                    left: (60 + cascade) + 'px',
+                    top: (60 + cascade) + 'px',
+                    width: '250px',
+                    height: '180px'
+                });
+                triggerAutoSave();
             });
 
             return { pageEl: page, canvasId: pageId };
@@ -1789,7 +1838,6 @@
             const { pageEl, canvasId } = createPhotoPageElement();
             wrapper.appendChild(pageEl);
             selectPage(pageEl);
-            openFilePicker(canvasId);
             updatePageCounter();
             triggerAutoSave();
         }
@@ -1834,9 +1882,16 @@
                 document.body.removeChild(tmp);
                 if (files.length === 0) return;
 
-                Promise.all(files.map(blobToDataURL)).then(srcs => {
-                    srcs.forEach(src => insertImageAsBox(canvasId, src));
-                });
+                const selectedBox = document.querySelector('.resizable-box.selected-box');
+                if (selectedBox && files.length === 1) {
+                    const img = selectedBox.querySelector('img');
+                    const label = selectedBox.querySelector('.upload-label');
+                    loadFileIntoBox(files[0], img, label, selectedBox, canvasId);
+                } else {
+                    Promise.all(files.map(blobToDataURL)).then(srcs => {
+                        srcs.forEach(src => insertImageAsBox(canvasId, src));
+                    });
+                }
             });
 
             tmp.click();
@@ -1919,9 +1974,12 @@
             }
 
             box.innerHTML = `
-                <div class="move-handle" title="खींचकर move करें">▬ ▬ ▬ &nbsp; DRAG &nbsp; ▬ ▬ ▬</div>
                 <div class="delete-btn"  title="हटाएं (Del key)">✕</div>
                 <div class="rotate-btn"  title="90° घुमाएं (R key)">↻</div>
+                <div class="manual-move-btn move-up" title="ऊपर खिसकाएं">▲</div>
+                <div class="manual-move-btn move-down" title="नीचे खिसकाएं">▼</div>
+                <div class="manual-move-btn move-left" title="बाएं खिसकाएं">◀</div>
+                <div class="manual-move-btn move-right" title="दाएं खिसकाएं">▶</div>
                 <div class="box-content">
                     <label for="${inputId}" class="upload-label" style="${lblStyle}">
                         📁 CLICK TO UPLOAD<br>
@@ -1961,6 +2019,32 @@
             box.querySelector('.rotate-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
                 rotateImage(img);
+            });
+
+            const MOVE_STEP = 5;
+            box.querySelector('.move-up').addEventListener('click', (e) => {
+                e.stopPropagation();
+                snapshotState();
+                box.style.top = (parseFloat(box.style.top) || 0) - MOVE_STEP + 'px';
+                triggerAutoSave();
+            });
+            box.querySelector('.move-down').addEventListener('click', (e) => {
+                e.stopPropagation();
+                snapshotState();
+                box.style.top = (parseFloat(box.style.top) || 0) + MOVE_STEP + 'px';
+                triggerAutoSave();
+            });
+            box.querySelector('.move-left').addEventListener('click', (e) => {
+                e.stopPropagation();
+                snapshotState();
+                box.style.left = (parseFloat(box.style.left) || 0) - MOVE_STEP + 'px';
+                triggerAutoSave();
+            });
+            box.querySelector('.move-right').addEventListener('click', (e) => {
+                e.stopPropagation();
+                snapshotState();
+                box.style.left = (parseFloat(box.style.left) || 0) + MOVE_STEP + 'px';
+                triggerAutoSave();
             });
 
             box.addEventListener('mousedown', (e) => selectBox(box));
@@ -2136,45 +2220,7 @@
            DRAG & RESIZE ENGINE
         ============================================================ */
         function makeDraggable(el) {
-            const handle = el.querySelector('.move-handle');
-
-            function handleStart(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-                const startX = clientX - el.offsetLeft;
-                const startY = clientY - el.offsetTop;
-                let hasMoved = false;
-
-                function onMove(ev) {
-                    if (!hasMoved) {
-                        snapshotState();
-                        hasMoved = true;
-                    }
-                    const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
-                    const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
-                    el.style.left = (cx - startX) + 'px';
-                    el.style.top = (cy - startY) + 'px';
-                }
-                function onUp() {
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onUp);
-                    document.removeEventListener('touchmove', onMove);
-                    document.removeEventListener('touchend', onUp);
-                    triggerAutoSave();
-                }
-
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onUp);
-                document.addEventListener('touchmove', onMove, { passive: false });
-                document.addEventListener('touchend', onUp);
-            }
-
-            handle.addEventListener('mousedown', handleStart);
-            handle.addEventListener('touchstart', handleStart, { passive: false });
+            // Mouse/touch dragging disabled on user request
         }
 
         function makeResizable(el) {
@@ -2247,125 +2293,7 @@
            IMAGE PINCH/SCROLL ZOOM & PAN ENGINE
         ============================================================ */
         function setupImageInteractions(img) {
-            const content = img.parentElement;
-
-            let wheelTimeout = null;
-            let isWheeling = false;
-
-            content.addEventListener('wheel', (e) => {
-                const box = img.closest('.resizable-box');
-                if (!box.classList.contains('selected-box')) {
-                    selectBox(box);
-                    return;
-                }
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (!isWheeling) {
-                    snapshotState();
-                    isWheeling = true;
-                }
-
-                clearTimeout(wheelTimeout);
-                wheelTimeout = setTimeout(() => {
-                    isWheeling = false;
-                    triggerAutoSave();
-                }, 300);
-
-                let s = parseFloat(img.dataset.scale || 1) - (e.deltaY * ZOOM_SPEED);
-                img.dataset.scale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, s));
-                applyImageTransform(img);
-            }, { passive: false });
-
-            // Pinch zoom on Touch Displays
-            let initialDistance = null;
-            let initialScale = null;
-            content.addEventListener('touchstart', (e) => {
-                const box = img.closest('.resizable-box');
-                if (!box.classList.contains('selected-box')) {
-                    selectBox(box);
-                    return;
-                }
-                if (e.touches.length === 2) {
-                    e.preventDefault();
-                    snapshotState();
-                    initialDistance = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                    initialScale = parseFloat(img.dataset.scale || 1);
-                }
-            }, { passive: false });
-
-            content.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 2 && initialDistance) {
-                    e.preventDefault();
-                    const currentDistance = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                    const s = initialScale * (currentDistance / initialDistance);
-                    img.dataset.scale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, s));
-                    applyImageTransform(img);
-                }
-            }, { passive: false });
-
-            content.addEventListener('touchend', (e) => {
-                if (e.touches.length < 2 && initialDistance !== null) {
-                    initialDistance = null;
-                    triggerAutoSave();
-                }
-            });
-
-            // PANNING MECHANISM
-            function handleStart(e) {
-                if (e.type === 'mousedown' && e.button !== 0) return;
-                if (e.type === 'touchstart' && e.touches.length > 1) return;
-
-                const box = img.closest('.resizable-box');
-                if (!box.classList.contains('selected-box')) {
-                    selectBox(box);
-                    return;
-                }
-
-                e.preventDefault();
-                e.stopPropagation();
-
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-                const startX = clientX - parseFloat(img.dataset.x || 0);
-                const startY = clientY - parseFloat(img.dataset.y || 0);
-                let hasMoved = false;
-
-                function onMove(ev) {
-                    if (ev.type === 'touchmove' && ev.touches.length > 1) return;
-                    if (!hasMoved) {
-                        snapshotState();
-                        hasMoved = true;
-                    }
-                    const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
-                    const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
-                    img.dataset.x = cx - startX;
-                    img.dataset.y = cy - startY;
-                    applyImageTransform(img);
-                }
-                function onUp() {
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onUp);
-                    document.removeEventListener('touchmove', onMove);
-                    document.removeEventListener('touchend', onUp);
-                    if (hasMoved) triggerAutoSave();
-                }
-
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onUp);
-                document.addEventListener('touchmove', onMove, { passive: false });
-                document.addEventListener('touchend', onUp);
-            }
-
-            img.addEventListener('mousedown', handleStart);
-            img.addEventListener('touchstart', handleStart, { passive: false });
+            // Pinch/scroll zoom and pan disabled on user request
         }
 
         /* ============================================================
