@@ -1,0 +1,2420 @@
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>25वीं वाहिनी PAC रायबरेली — रिपोर्ट एवं फोटो एडिटर</title>
+    <meta name="description" content="25वीं वाहिनी PAC रायबरेली — ABC कोर्स रिपोर्ट एवं फोटो एडिटर">
+
+    <!-- PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Google Fonts for Premium Hindi Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ============================================================
+           THEMES & GLOBAL VARIABLES
+        ============================================================ */
+        :root {
+            /* Rainbow theme matching image_6713bb.jpg */
+            --page-border: #f0c8c8;
+            --page-bg: linear-gradient(135deg, #ff0606 0%, #fdb334 50%, #00ca33 100%);
+            --table-bg: #d4e157;
+            --table-border: #33691e;
+            --table-header-bg: #9ba34a;
+            --header-bg: linear-gradient(174deg, #e51a23 0%, #e51a23 58%, #4fa900 58.2%, #4fa900 100%);
+            --header-text: #ffffff;
+            --sub-header-bg: #fe1063;
+            --sub-header-border: #0097a7;
+            --text-color: #000000;
+        }
+
+        body.theme-formal {
+            --page-border: #1e3a8a;
+            --page-bg: #f8fafc;
+            --table-bg: #ffffff;
+            --table-border: #1e3a8a;
+            --table-header-bg: #1e3a8a;
+            --header-bg: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+            --header-text: #f59e0b;
+            --sub-header-bg: #b45309;
+            --sub-header-border: #b45309;
+            --text-color: #0f172a;
+        }
+
+        /* ============================================================
+           RESET & BASIC STYLES
+        ============================================================ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0f172a;
+            background-image:
+                radial-gradient(ellipse at 15% 30%, rgba(30, 41, 59, 0.8) 0%, transparent 60%),
+                radial-gradient(ellipse at 85% 70%, rgba(15, 23, 42, 0.9) 0%, transparent 60%);
+            font-family: 'Mukta', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        /* Workspace Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* ============================================================
+           MASTER CONTROLS BAR
+        ============================================================ */
+        .master-controls {
+            background: linear-gradient(135deg, #090d16 0%, #141e30 100%);
+            width: 100%;
+            padding: 12px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 5000;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .master-btn {
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .master-btn:hover {
+            filter: brightness(1.2);
+            transform: translateY(-1.5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .master-btn:active {
+            transform: translateY(0) scale(0.96);
+        }
+
+        .master-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            filter: none;
+        }
+
+        /* Theme Buttons Palette */
+        .btn-add-page {
+            background: linear-gradient(135deg, #10b981, #047857);
+            color: #fff;
+        }
+
+        .btn-paste-page {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: #fff;
+        }
+
+        .btn-multi-upload {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            color: #fff;
+        }
+
+        .btn-delete-page {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            color: #fff;
+        }
+
+        .btn-pdf {
+            background: linear-gradient(135deg, #f97316, #c2410c);
+            color: #fff;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #64748b, #334155);
+            color: #fff;
+        }
+
+        .btn-bold {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        /* Theme Selector */
+        .theme-select-container {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            gap: 6px;
+        }
+
+        .theme-select-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .theme-select {
+            background: #1e293b;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Workspace Zoom Control */
+        .scale-control-container {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            gap: 8px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .scale-btn {
+            background: #334155;
+            color: white;
+            border: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .scale-btn:hover {
+            background: #475569;
+        }
+
+        .page-counter {
+            background: rgba(255, 255, 255, 0.08);
+            color: #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            white-space: nowrap;
+        }
+
+        .info-text {
+            color: #94a3b8;
+            font-size: 11px;
+            text-align: center;
+            width: 100%;
+            padding: 4px 0 0;
+            line-height: 1.5;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-text b {
+            color: #cbd5e1;
+        }
+
+        /* ============================================================
+           TOAST NOTIFICATIONS
+        ============================================================ */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            transform: translateX(calc(100% + 40px));
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-width: 320px;
+            border-left: 5px solid rgba(255, 255, 255, 0.4);
+            pointer-events: all;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.type-success {
+            background: #10b981;
+            color: #fff;
+        }
+
+        .toast.type-error {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .toast.type-info {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .toast.type-warn {
+            background: #f59e0b;
+            color: #fff;
+        }
+
+        /* ============================================================
+           PAGES WRAPPER & ZOOM HANDLING
+        ============================================================ */
+        #all-pages-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 45px;
+            padding: 40px 20px 80px;
+            max-width: 100vw;
+            align-items: center;
+            transform-origin: top center;
+            transition: transform 0.2s ease;
+        }
+
+        /* ============================================================
+           A4 PAGE BASE (LANDSCAPE)
+        ============================================================ */
+        .a4-page {
+            width: 297mm;
+            height: 210mm;
+            background: white;
+            position: relative;
+            box-sizing: border-box;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+            page-break-after: always;
+            overflow: hidden;
+            cursor: pointer;
+            transition: box-shadow 0.25s, outline 0.2s;
+            flex-shrink: 0;
+        }
+
+        .a4-page.selected-page {
+            outline: 5px solid #f59e0b;
+            outline-offset: 8px;
+            box-shadow: 0 15px 45px rgba(245, 158, 11, 0.35), 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Page label shown on screen */
+        .page-label {
+            position: absolute;
+            bottom: -32px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            pointer-events: none;
+            background: #1e293b;
+            padding: 2px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* ============================================================
+           REPORT PAGE (PAGE 1)
+        ============================================================ */
+        .report-inner {
+            width: 100%;
+            height: 100%;
+            background: var(--page-bg);
+            padding: 105px 15mm 6mm 15mm;
+            box-sizing: border-box;
+            border: 15px solid var(--page-border);
+            display: flex;
+            flex-direction: column;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .header-top {
+            position: absolute;
+            top: 2%;
+            left: 9.2%;
+            width: 82%;
+            background: linear-gradient(to bottom right, #dc2128 50%, #4ea800 50%);
+            color: white;
+            padding: 8px 20px;
+            font-size: 35pt;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+            border-bottom: 0px solid #fff;
+            border-radius: 10px 10px 10px 10px;
+            /* नीचे से हल्का सा गोल दिखने के लिए */
+        }
+
+        .header-top .logo-left {
+            height: 75px;
+            width: 75px;
+            object-fit: contain;
+            background: rgb(255, 246, 246);
+            border-radius: 50%;
+            padding: 3px;
+        }
+
+        .header-top .logo-right {
+            height: 75px;
+            width: 75px;
+            object-fit: contain;
+        }
+
+        .header-top span {
+            flex-grow: 1;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .header-sub {
+            background-color: #fe1063;
+            color: rgb(255, 255, 255);
+            text-align: center;
+            padding: 6px;
+            font-size: 15pt;
+            font-weight: bold;
+            border-radius: 8px;
+            width: 60%;
+            margin: 0 auto 10px;
+            border: 2px solid #0097a7;
+        }
+
+        .intro-text {
+            font-size: 14pt;
+            line-height: 1.35;
+            margin-bottom: 10px;
+            color: var(--text-color);
+            font-weight: 700;
+            text-align: left;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--table-bg);
+            table-layout: fixed;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s;
+        }
+
+        th,
+        td {
+            border: 1.5pt solid var(--table-border);
+            padding: 4px 5px;
+            text-align: center;
+            font-size: 13pt;
+            color: var(--text-color);
+            font-weight: 700;
+        }
+
+        th {
+            background-color: var(--table-header-bg);
+            font-weight: 800;
+            padding: 6px 5px;
+            color: #000000;
+        }
+
+        .footer-section {
+            margin-top: auto;
+            align-self: flex-end;
+            width: 440px;
+            font-size: 14pt;
+            font-weight: bold;
+            line-height: 1.25;
+            padding-bottom: 2px;
+            color: var(--text-color);
+            text-align: left;
+        }
+
+        /* ============================================================
+           PHOTO PAGE
+        ============================================================ */
+        .inner-border-canvas {
+            width: 100%;
+            height: 100%;
+            border: 15px solid var(--page-border);
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+            background: var(--page-bg);
+            padding: 105px 15mm 6mm 15mm;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        /* Subtle grain overlay */
+        .inner-border-canvas::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ============================================================
+           RESIZABLE BOX
+        ============================================================ */
+        .resizable-box {
+            position: absolute;
+            background: white;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+            cursor: default;
+            outline: none;
+        }
+
+        .resizable-box::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            background: linear-gradient(45deg, #f59e0b, #ef4444, #3b82f6, #10b981);
+            border-radius: 2px;
+            z-index: -1;
+            opacity: 0.55;
+        }
+
+        .resizable-box:focus {
+            z-index: 20;
+            box-shadow: 0 0 0 3px #3b82f6, 0 8px 30px rgba(59, 130, 246, 0.6);
+        }
+
+        .resizable-box:focus::after {
+            opacity: 1;
+        }
+
+        .box-content {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .box-content img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            cursor: grab;
+            transform-origin: center center;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .box-content img:active {
+            cursor: grabbing;
+        }
+
+        /* Move Handle */
+        .move-handle {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(90deg, #1e293b, #334155);
+            cursor: move;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 4px;
+            user-select: none;
+            font-weight: bold;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+
+        /* Delete Button */
+        .delete-btn {
+            position: absolute;
+            top: -16px;
+            right: -16px;
+            width: 32px;
+            height: 32px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            z-index: 110;
+            border: 2px solid white;
+            transition: all 0.2s;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: scale(1.2);
+        }
+
+        /* Rotate Button */
+        .rotate-btn {
+            position: absolute;
+            top: -16px;
+            left: -16px;
+            width: 32px;
+            height: 32px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 110;
+            border: 2px solid white;
+            transition: all 0.2s;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .rotate-btn:hover {
+            background: #2563eb;
+            transform: rotate(90deg) scale(1.2);
+        }
+
+        /* Selected Box State */
+        .resizable-box {
+            outline: 2px solid transparent;
+            transition: outline 0.2s;
+        }
+
+        .resizable-box.selected-box {
+            outline: 2px dashed #3b82f6;
+        }
+
+        .resizable-box:not(.selected-box) .resizer,
+        .resizable-box:not(.selected-box) .move-handle,
+        .resizable-box:not(.selected-box) .delete-btn,
+        .resizable-box:not(.selected-box) .rotate-btn {
+            display: none !important;
+        }
+
+        /* Resizer Handles */
+        .resizer {
+            position: absolute;
+            background: #3b82f6;
+            z-index: 105;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid white;
+            transition: all 0.15s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .resizer:hover {
+            background: #2563eb;
+            transform: scale(1.3);
+        }
+
+        .resizer.tl {
+            top: -10px;
+            left: -10px;
+            cursor: nw-resize;
+        }
+
+        .resizer.tr {
+            top: -10px;
+            right: -10px;
+            cursor: ne-resize;
+        }
+
+        .resizer.bl {
+            bottom: -10px;
+            left: -10px;
+            cursor: sw-resize;
+        }
+
+        .resizer.br {
+            bottom: -10px;
+            right: -10px;
+            cursor: se-resize;
+        }
+
+        .resizer.t {
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: n-resize;
+        }
+
+        .resizer.b {
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: s-resize;
+        }
+
+        .resizer.l {
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: w-resize;
+        }
+
+        .resizer.r {
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: e-resize;
+        }
+
+        /* Upload Label inside blank box */
+        .upload-label {
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            z-index: 50;
+            user-select: none;
+            padding: 16px;
+            line-height: 1.8;
+            transition: color 0.2s;
+        }
+
+        .upload-label:hover {
+            color: #1e293b;
+        }
+
+        /* Canvas-level Add/Paste controls */
+        .add-box-controls {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .add-box-btn-inner {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 12px;
+            color: #1e293b;
+            white-space: nowrap;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .add-box-btn-inner:hover {
+            background: white;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* ContentEditable fields focus overlay */
+        [contenteditable="true"]:focus {
+            outline: 2px dashed #3b82f6;
+            outline-offset: 4px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+        }
+
+        /* ============================================================
+           PDF EXPORT MODE & PRINT STYLING
+        ============================================================ */
+        body.pdf-export-mode .master-controls,
+        body.pdf-export-mode .resizer,
+        body.pdf-export-mode .move-handle,
+        body.pdf-export-mode .delete-btn,
+        body.pdf-export-mode .rotate-btn,
+        body.pdf-export-mode .upload-label,
+        body.pdf-export-mode .add-box-btn-inner,
+        body.pdf-export-mode #toast-container,
+        body.pdf-export-mode .page-label {
+            display: none !important;
+        }
+
+        body.pdf-export-mode #all-pages-wrapper {
+            transform: none !important;
+            padding: 0 !important;
+            gap: 0 !important;
+        }
+
+        body.pdf-export-mode .a4-page {
+            outline: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+        }
+
+        body.pdf-export-mode .resizable-box {
+            box-shadow: none !important;
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+
+            html,
+            body {
+                display: block !important;
+                background: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: auto;
+                height: auto;
+            }
+
+            .master-controls,
+            .resizer,
+            .move-handle,
+            .delete-btn,
+            .rotate-btn,
+            .upload-label,
+            .add-box-btn-inner,
+            #toast-container,
+            .page-label {
+                display: none !important;
+            }
+
+            #all-pages-wrapper {
+                display: block !important;
+                transform: none !important;
+                gap: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .a4-page {
+                display: block !important;
+                box-shadow: none !important;
+                width: 297mm;
+                height: 209.5mm;
+                margin: 0 auto !important;
+                page-break-inside: avoid !important;
+                page-break-after: always !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                overflow: hidden;
+                outline: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================================================
+         MASTER CONTROLS
+    ========================================================= -->
+    <div class="master-controls" role="toolbar" aria-label="मुख्य नियंत्रण">
+        <div class="controls-row">
+            <button class="master-btn btn-clear" id="btn-undo" title="Undo (Ctrl+Z)" disabled>↩️ Undo</button>
+            <button class="master-btn btn-clear" id="btn-redo" title="Redo (Ctrl+Y)" disabled>↪️ Redo</button>
+            <button class="master-btn btn-add-page" id="btn-add-page">📄 नया फोटो पेज</button>
+            <button class="master-btn btn-paste-page" id="btn-paste-page">📋 Clipboard पेज</button>
+            <button class="master-btn btn-multi-upload" id="btn-multi-upload">🖼️ Multi Upload</button>
+            <button class="master-btn btn-delete-page" id="btn-delete-page">🗑️ पेज हटाएं</button>
+            <button class="master-btn btn-pdf" id="btn-pdf">📄 PDF Download</button>
+            <button class="master-btn btn-print" id="btn-print">🖨️ Print Report</button>
+            <button class="master-btn btn-clear" id="btn-clear">🔄 डेटा मिटाएं</button>
+            <button class="master-btn btn-bold" id="btn-bold" title="Ctrl+B">𝐁 Bold</button>
+
+            <!-- Dynamic Theme Selector -->
+            <div class="theme-select-container">
+                <span class="theme-select-label">🎨 थीम:</span>
+                <select id="theme-selector" class="theme-select">
+                    <option value="default" selected>सतरंगी (Rainbow)</option>
+                    <option value="theme-formal">प्रशासनिक (Navy/Gold)</option>
+                </select>
+            </div>
+
+            <!-- Preview Scaler Slider -->
+            <div class="scale-control-container">
+                <span>🔍 एडिट ज़ूम:</span>
+                <button class="scale-btn" id="btn-scale-down">-</button>
+                <span id="scale-indicator">100%</span>
+                <button class="scale-btn" id="btn-scale-up">+</button>
+            </div>
+
+            <span class="page-counter" id="page-counter" aria-live="polite">📃 1 पेज</span>
+        </div>
+
+        <!-- Hidden file input -->
+        <input type="file" id="multi-file-input" multiple accept="image/*" hidden>
+
+        <div class="info-text">
+            <b>Select:</b> पेज क्लिक &nbsp;|&nbsp;
+            <b>Move Box:</b> काला बार खींचें / Arrow keys &nbsp;|&nbsp;
+            <b>Resize Box:</b> कोने खींचें &nbsp;|&nbsp;
+            <b>Image Zoom/Pan:</b> Scroll / Drag &nbsp;|&nbsp;
+            <b>Reset Image:</b> Dbl-click &nbsp;|&nbsp;
+            <b>Rotate:</b> R key / नीला बटन &nbsp;|&nbsp;
+            <b>Bold Text:</b> Ctrl+B &nbsp;|&nbsp;
+            <b>Undo/Redo:</b> Ctrl+Z / Ctrl+Y
+        </div>
+    </div>
+
+    <!-- =========================================================
+         ALL PAGES WORKSPACE WRAPPER
+    ========================================================= -->
+    <div id="all-pages-wrapper">
+
+        <!-- PAGE 1: PAC REPORT (MATCHING IMAGE_6713BB.JPG & IMAGE_671EE2.PNG) -->
+        <div class="a4-page" id="report-page" tabindex="0">
+            <div class="report-inner">
+                <!-- Slanted Header Theme exactly replicating user images -->
+                <div class="header-top">
+                    <img src="https://docs.google.com/uc?export=download&id=1DqnhcJQR5Ibm4CFtleaHm9QsKmfTBZ9J"
+                        alt="PAC Logo" class="logo-left" onerror="this.onerror=null; this.src='logo1.png'">
+
+                    <span contenteditable="true" data-save-id="header-title">25वीं वाहिनी पीएसी, रायबरेली</span>
+
+                    <img src="https://docs.google.com/uc?export=download&id=1xIE71zj4PL7voFfQl6oezri0eKXjNX9j"
+                        alt="UP Police Logo" class="logo-right" onerror="this.onerror=null; this.src='logo2.png'">
+                </div>
+
+                <div class="header-sub" contenteditable="true" data-save-id="header-sub" id="report-date-header">ए/बी/सी
+                    कोर्स की रिपोर्ट, दिनाँक:- लोड हो रहा है…</div>
+
+                <div class="intro-text" contenteditable="true" data-save-id="report-intro" id="report-intro">
+                    महोदय,<br>
+                    आज दिनाँक — को समस्त दलनायकों एवं प्रभारी दलनायकों के नेतृत्व में समस्त दलों को निम्नलिखित
+                    व्यवस्थापन पर उपस्थित सभी अधिकारी/कर्मचारी द्वारा ए/बी/सी कोर्स के अंतर्गत कोर्स/पाठ्यक्रम पढ़ाया
+                    गया।
+                </div>
+
+                <!-- Replicated Index Table exactly from image_6713bb.jpg -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 6.5%">क्र०सं०</th>
+                            <th style="width: 6%">वाहिनी</th>
+                            <th style="width:10%">दल</th>
+                            <th style="width:21%">दलनायक/प्रभारी का नाम</th>
+                            <th style="width:58%">अध्याय/अभ्यास का विवरण</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td contenteditable="true" data-save-id="cell-1-1">01</td>
+                            <!-- Rowspan spans over 8 rows perfectly -->
+                            <td rowspan="8" contenteditable="true" data-save-id="cell-1-2"
+                                style="font-weight: 800; background-color: #d4e157; vertical-align: middle;">25वीं
+                                वाहिनी पीएसी</td>
+                            <td contenteditable="true" data-save-id="cell-1-3">ए दल</td>
+                            <td contenteditable="true" data-save-id="cell-1-4">सीसी श्री संदीप कुमार शुक्ला</td>
+                            <td contenteditable="true" data-save-id="cell-1-5">कोर्स, कार्य-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" data-save-id="cell-2-1">02</td>
+                            <td contenteditable="true" data-save-id="cell-2-3">बी दल</td>
+                            <td contenteditable="true" data-save-id="cell-2-4">पीसी श्री मानिकचंद्र यादव</td>
+                            <td contenteditable="true" data-save-id="cell-2-5">कोर्स, कार्य-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" data-save-id="cell-3-1">03</td>
+                            <td contenteditable="true" data-save-id="cell-3-3">सी दल</td>
+                            <td contenteditable="true" data-save-id="cell-3-4">सीसी श्री सूर्यनाथ वर्मा</td>
+                            <td contenteditable="true" data-save-id="cell-3-5">कोर्स, कार्य-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" data-save-id="cell-4-1">04</td>
+                            <td contenteditable="true" data-save-id="cell-4-3">डी दल</td>
+                            <td contenteditable="true" data-save-id="cell-4-4">सीसी श्री महेंद्र कुमार यादव</td>
+                            <td contenteditable="true" data-save-id="cell-4-5">कोर्स, कार्य-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" data-save-id="cell-5-1">05</td>
+                            <td contenteditable="true" data-save-id="cell-5-3">ई दल</td>
+                            <td contenteditable="true" data-save-id="cell-5-4">पीसी श्री जय प्रकाश सिंह</td>
+                            <td contenteditable="true" data-save-id="cell-5-5">कोर्स, कार्य-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" data-save-id="cell-6-1">06</td>
+                            <td contenteditable="true" data-save-id="cell-6-3">एफ दल</td>
+                            <td contenteditable="true" data-save-id="cell-6-4">पीसी श्री सुजीत यादव</td>
+                            <td contenteditable="true" data-save-id="cell-6-5">कोर्स, कार्य-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" data-save-id="cell-7-1">07</td>
+                            <td contenteditable="true" data-save-id="cell-7-3">जी दल</td>
+                            <td contenteditable="true" data-save-id="cell-7-4">पीसी श्री फूलचंद्र</td>
+                            <td contenteditable="true" data-save-id="cell-7-5">कोर्स, कार्य-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" data-save-id="cell-8-1">08</td>
+                            <td contenteditable="true" data-save-id="cell-8-3">एच दल</td>
+                            <td contenteditable="true" data-save-id="cell-8-4">पीसी श्री अमित गुप्ता</td>
+                            <td contenteditable="true" data-save-id="cell-8-5">कोर्स, कार्य-</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="footer-section" contenteditable="true" data-save-id="footer-section">
+                    संलग्न छायाचित्र व रिपोर्ट सादर सेवा में प्रेषित है।<br><br>
+                    लाल भरत कुमार पाल<br>सेनानायक, 25वी वाहिनी पीएसी, रायबरेली
+                </div>
+            </div>
+            <div class="page-label">📄 पेज 1 — रिपोर्ट</div>
+        </div>
+
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+    <!-- =========================================================
+         JAVASCRIPT ENGINE
+    ========================================================= -->
+    <script>
+        'use strict';
+
+        /* ============================================================
+           CONSTANTS & WORKSPACE SETTINGS
+        ============================================================ */
+        const STORAGE_KEY = 'pac_report_v4_premium';
+        const THEME_STORAGE_KEY = 'pac_report_theme_v4';
+        const GAP = 8;             // px gap between boxes
+        const MIN_BOX_W = 100;     // minimum box width
+        const MIN_BOX_H = 80;      // minimum box height
+        const PAGE_LIMIT = 6;      // max images per auto-page
+        const ZOOM_SPEED = 0.003;   // wheel zoom speed
+        const MAX_ZOOM = 6;
+        const MIN_ZOOM = 0.1;
+
+        /* ============================================================
+           STATE VARIABLES
+        ============================================================ */
+        const wrapper = document.getElementById('all-pages-wrapper');
+        let selectedPage = null;
+        let saveTimer = null;
+        let undoStack = [];
+        let redoStack = [];
+        const MAX_HISTORY = 15;
+        let currentScale = 1.0;
+
+        // Undo Image Cache to save base64 memory duplicate in undo/redo actions
+        const undoImageCache = new Map();
+        function getUndoImageId(src) {
+            if (!src || src === window.location.href) return '';
+            if (src.length < 1000) return src;
+            for (const [id, value] of undoImageCache.entries()) {
+                if (value === src) return id;
+            }
+            const id = 'img_' + Math.random().toString(36).substr(2, 9);
+            undoImageCache.set(id, src);
+            return id;
+        }
+
+        function resolveUndoImageId(id) {
+            if (id && id.startsWith('img_') && undoImageCache.has(id)) {
+                return undoImageCache.get(id);
+            }
+            return id;
+        }
+
+        /* ============================================================
+           EVENT BINDINGS
+        ============================================================ */
+        document.getElementById('btn-undo').addEventListener('click', undo);
+        document.getElementById('btn-redo').addEventListener('click', redo);
+        document.getElementById('btn-add-page').addEventListener('click', addPhotoPage);
+        document.getElementById('btn-paste-page').addEventListener('click', pasteClipboardToNewPage);
+        document.getElementById('btn-delete-page').addEventListener('click', deleteSelectedPage);
+        document.getElementById('btn-pdf').addEventListener('click', downloadPDF);
+        document.getElementById('btn-print').addEventListener('click', () => window.print());
+        document.getElementById('btn-clear').addEventListener('click', clearSavedData);
+        document.getElementById('btn-bold').addEventListener('click', () => {
+            snapshotState();
+            document.execCommand('bold', false, null);
+        });
+
+        document.getElementById('report-page').addEventListener('mousedown', function (e) { selectPage(this, e); });
+        document.getElementById('report-page').addEventListener('touchstart', function (e) { selectPage(this, e); });
+
+        // Theme selector mechanism
+        const themeSelector = document.getElementById('theme-selector');
+        themeSelector.addEventListener('change', function () {
+            setTheme(this.value);
+            snapshotState();
+            triggerAutoSave();
+        });
+
+        // Scaler mechanisms (Screen editor zoom)
+        document.getElementById('btn-scale-up').addEventListener('click', () => adjustWorkspaceScale(0.05));
+        document.getElementById('btn-scale-down').addEventListener('click', () => adjustWorkspaceScale(-0.05));
+
+        // Multi-image upload button
+        document.getElementById('btn-multi-upload').addEventListener('click', () => {
+            document.getElementById('multi-file-input').click();
+        });
+        document.getElementById('multi-file-input').addEventListener('change', function () {
+            if (!this.files || this.files.length === 0) return;
+            Promise.all(Array.from(this.files).map(blobToDataURL))
+                .then(srcs => buildAutoPage(srcs));
+            this.value = ''; // Reset element
+        });
+
+
+
+        /* ============================================================
+           WORKSPACE SCALING (ZOOM) CONTROL
+        ============================================================ */
+        function adjustWorkspaceScale(delta) {
+            currentScale = Math.min(1.5, Math.max(0.4, currentScale + delta));
+            wrapper.style.transform = `scale(${currentScale})`;
+            document.getElementById('scale-indicator').textContent = `${Math.round(currentScale * 100)}%`;
+        }
+
+        /* ============================================================
+           DYNAMIC THEMES CONTROLLER
+        ============================================================ */
+        function setTheme(themeName) {
+            document.body.className = '';
+            if (themeName !== 'default') {
+                document.body.classList.add(themeName);
+            }
+            themeSelector.value = themeName;
+            localStorage.setItem(THEME_STORAGE_KEY, themeName);
+        }
+
+        /* ============================================================
+           TOAST NOTIFICATIONS
+        ============================================================ */
+        function showToast(msg, type = 'success', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast type-${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, duration);
+        }
+
+        /* ============================================================
+           PAGE COUNTER & LABELS UPDATER
+        ============================================================ */
+        function updatePageCounter() {
+            const pages = wrapper.querySelectorAll('.a4-page');
+            document.getElementById('page-counter').textContent = `📃 ${pages.length} पेज`;
+
+            pages.forEach((page, i) => {
+                const label = page.querySelector('.page-label');
+                if (!label) return;
+                if (i === 0) {
+                    label.textContent = '📄 पेज 1 — रिपोर्ट';
+                } else {
+                    const cnt = page.querySelectorAll('.resizable-box').length;
+                    label.textContent = `📷 पेज ${i + 1} — ${cnt} फोटो`;
+                }
+            });
+        }
+
+        /* ============================================================
+           PAGE AND BOX SELECTION
+        ============================================================ */
+        function selectBox(boxToSelect) {
+            document.querySelectorAll('.resizable-box.selected-box').forEach(b => {
+                if (b !== boxToSelect) b.classList.remove('selected-box');
+            });
+            if (boxToSelect) {
+                boxToSelect.classList.add('selected-box');
+                boxToSelect.focus();
+                selectPage(boxToSelect.closest('.a4-page'));
+            }
+        }
+
+        function selectPage(pageEl, e) {
+            if (selectedPage !== pageEl) {
+                if (selectedPage) selectedPage.classList.remove('selected-page');
+                selectedPage = pageEl;
+                if (pageEl) pageEl.classList.add('selected-page');
+            }
+            if (e && !e.target.closest('.resizable-box')) {
+                selectBox(null);
+            }
+        }
+
+        /* ============================================================
+           DELETE SELECTED PAGE
+        ============================================================ */
+        function deleteSelectedPage() {
+            if (!selectedPage) {
+                showToast('⚠️ पहले कोई पेज चुनें', 'warn');
+                return;
+            }
+            if (selectedPage.id === 'report-page') {
+                showToast('⚠️ रिपोर्ट पेज डिलीट नहीं हो सकता', 'warn');
+                return;
+            }
+            if (wrapper.querySelectorAll('.a4-page').length <= 1) {
+                showToast('⚠️ कम से कम एक पेज जरूरी है', 'warn');
+                return;
+            }
+            if (!confirm('क्या आप यह पेज हटाना चाहते हैं?')) return;
+
+            snapshotState();
+            selectedPage.remove();
+            selectedPage = null;
+            updatePageCounter();
+            triggerAutoSave();
+            showToast('🗑️ पेज हटाया गया', 'info');
+        }
+
+        /* ============================================================
+           AUTOSAVE SYSTEMS
+        ============================================================ */
+        function triggerAutoSave() {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => saveAllData(true), 1500);
+        }
+
+        // Periodic forced save every 15s (silent)
+        setInterval(() => saveAllData(true), 15000);
+
+        // Save before tab closes
+        const _beforeUnloadSave = () => saveAllData(true);
+        window.addEventListener('beforeunload', _beforeUnloadSave);
+
+        // Save on any editable content changes
+        document.addEventListener('input', (e) => {
+            if (e.target.getAttribute('contenteditable') === 'true') triggerAutoSave();
+        });
+
+        // Snapshot state for undo action when starting to edit
+        document.addEventListener('focusin', (e) => {
+            if (e.target.getAttribute('contenteditable') === 'true') {
+                snapshotState();
+            }
+        });
+
+        /* ============================================================
+           IMAGE COMPRESSION UTILITY FOR STORAGE
+        ============================================================ */
+        function compressImageForStorage(src, maxW = 1024, quality = 0.72) {
+            if (!src || !src.startsWith('data:image')) return Promise.resolve(src);
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.naturalWidth;
+                    let h = img.naturalHeight;
+                    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                    const cv = document.createElement('canvas');
+                    cv.width = w; cv.height = h;
+                    cv.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(cv.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = () => resolve(src);
+                img.src = src;
+            });
+        }
+
+        let _saveRetrying = false;
+
+        async function saveAllData(silent = false) {
+            try {
+                const pagesData = [];
+
+                for (const page of wrapper.querySelectorAll('.a4-page')) {
+                    // Report Page Serializer mapping save-ids exactly
+                    if (page.querySelector('.report-inner')) {
+                        const rd = { type: 'report', contents: {} };
+                        page.querySelectorAll('[data-save-id]').forEach(el => {
+                            rd.contents[el.getAttribute('data-save-id')] = el.innerHTML;
+                        });
+                        pagesData.push(rd);
+                        continue;
+                    }
+
+                    // Photo Page Serializer
+                    const canvas = page.querySelector('.inner-border-canvas');
+                    if (!canvas) continue;
+
+                    const pd = { type: 'photo', canvasId: canvas.id, boxes: [] };
+
+                    for (const box of canvas.querySelectorAll('.resizable-box')) {
+                        const img = box.querySelector('img');
+                        const hasImage = img && img.style.display !== 'none' && img.src &&
+                            img.src !== window.location.href;
+
+                        if (!hasImage) continue;
+
+                        const compressed = await compressImageForStorage(img.src);
+
+                        pd.boxes.push({
+                            left: box.style.left, top: box.style.top,
+                            width: box.style.width, height: box.style.height,
+                            imgSrc: compressed,
+                            imgDisplay: 'block',
+                            imgX: img.dataset.x || '0',
+                            imgY: img.dataset.y || '0',
+                            imgScale: img.dataset.scale || '1',
+                            imgRotation: img.dataset.rotation || '0',
+                            imgTransform: img.style.transform || ''
+                        });
+                    }
+                    pagesData.push(pd);
+                }
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(pagesData));
+                if (!silent) showToast('💾 सेव हो गया', 'success', 1200);
+                _saveRetrying = false;
+            } catch (err) {
+                if (err.name === 'QuotaExceededError') {
+                    if (_saveRetrying) {
+                        showToast('❌ Storage भर गई। Browser cache साफ करें।', 'error', 6000);
+                        _saveRetrying = false;
+                        return;
+                    }
+                    try {
+                        _saveRetrying = true;
+                        localStorage.removeItem(STORAGE_KEY);
+                        showToast('⚠️ Storage full थी, पुराना data हटाया। फिर से save हो रहा है…', 'warn', 4000);
+                        setTimeout(() => saveAllData(false), 2000);
+                    } catch (_) {
+                        showToast('❌ Storage भर गई। Browser cache साफ करें।', 'error', 6000);
+                        _saveRetrying = false;
+                    }
+                } else {
+                    console.warn('Save error:', err);
+                    showToast('⚠️ सेव नहीं हो सका', 'error');
+                }
+            }
+        }
+
+        /* ============================================================
+           UNDO / REDO STATE MANAGEMENT
+        ============================================================ */
+        function snapshotState() {
+            redoStack = [];
+            undoStack.push(JSON.stringify(getCurrentState()));
+            if (undoStack.length > MAX_HISTORY) undoStack.shift();
+            updateUndoRedoButtons();
+        }
+
+        function undo() {
+            if (undoStack.length === 0) return;
+            redoStack.push(JSON.stringify(getCurrentState()));
+            const state = JSON.parse(undoStack.pop());
+            restoreState(state);
+            updateUndoRedoButtons();
+            triggerAutoSave();
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+            undoStack.push(JSON.stringify(getCurrentState()));
+            const state = JSON.parse(redoStack.pop());
+            restoreState(state);
+            updateUndoRedoButtons();
+            triggerAutoSave();
+        }
+
+        function updateUndoRedoButtons() {
+            const btnUndo = document.getElementById('btn-undo');
+            const btnRedo = document.getElementById('btn-redo');
+            if (btnUndo) btnUndo.disabled = undoStack.length === 0;
+            if (btnRedo) btnRedo.disabled = redoStack.length === 0;
+        }
+
+        function getCurrentState() {
+            const pagesData = [];
+            for (const page of wrapper.querySelectorAll('.a4-page')) {
+                if (page.querySelector('.report-inner')) {
+                    const rd = { type: 'report', contents: {} };
+                    page.querySelectorAll('[data-save-id]').forEach(el => {
+                        rd.contents[el.getAttribute('data-save-id')] = el.innerHTML;
+                    });
+                    pagesData.push(rd);
+                    continue;
+                }
+                const canvas = page.querySelector('.inner-border-canvas');
+                if (!canvas) continue;
+                const pd = { type: 'photo', canvasId: canvas.id, boxes: [] };
+                for (const box of canvas.querySelectorAll('.resizable-box')) {
+                    const img = box.querySelector('img');
+                    pd.boxes.push({
+                        left: box.style.left, top: box.style.top,
+                        width: box.style.width, height: box.style.height,
+                        imgSrc: getUndoImageId(img.src),
+                        imgDisplay: img.style.display,
+                        imgX: img.dataset.x || '0',
+                        imgY: img.dataset.y || '0',
+                        imgScale: img.dataset.scale || '1',
+                        imgRotation: img.dataset.rotation || '0',
+                        imgTransform: img.style.transform || ''
+                    });
+                }
+                pagesData.push(pd);
+            }
+            return pagesData;
+        }
+
+        function restoreState(pagesData) {
+            if (!pagesData || pagesData.length === 0) return false;
+            wrapper.querySelectorAll('.a4-page:not(#report-page)').forEach(p => p.remove());
+            const firstData = pagesData[0];
+            if (firstData && firstData.type === 'report') {
+                const reportInner = document.getElementById('report-page').querySelector('.report-inner');
+
+                if (firstData.contents && Object.keys(firstData.contents).length > 0) {
+                    Object.keys(firstData.contents).forEach((key) => {
+                        const targetEl = reportInner.querySelector(`[data-save-id="${key}"]`);
+                        if (targetEl) {
+                            targetEl.innerHTML = firstData.contents[key];
+                        }
+                    });
+                }
+
+                if (!reportInner.querySelector('table')) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    location.reload();
+                    return false;
+                }
+
+                const headerSub = reportInner.querySelector('.header-sub');
+                if (headerSub && headerSub.textContent.includes('लोड हो रहा है')) {
+                    injectCurrentDate();
+                }
+            }
+
+            pagesData.forEach(pd => {
+                if (pd.type !== 'photo') return;
+                const { pageEl, canvasId } = createPhotoPageElement(pd.canvasId);
+                wrapper.appendChild(pageEl);
+                pd.boxes.forEach(bd => {
+                    bd.imgSrc = resolveUndoImageId(bd.imgSrc);
+                    addBoxWithData(canvasId, bd);
+                });
+            });
+            updatePageCounter();
+            return true;
+        }
+
+        function loadAllData() {
+            // Load saved Theme Preference
+            const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'default';
+            setTheme(savedTheme);
+
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+            try {
+                const pagesData = JSON.parse(raw);
+                return restoreState(pagesData);
+            } catch (err) {
+                console.warn('Load error:', err);
+                return false;
+            }
+        }
+
+        function clearSavedData() {
+            if (!confirm('सभी सेव डेटा मिटाना चाहते हैं? (पेज रीफ्रेश होगा)')) return;
+            window.removeEventListener('beforeunload', _beforeUnloadSave);
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(THEME_STORAGE_KEY);
+            location.reload();
+        }
+
+        /* ============================================================
+           PDF DOWNLOAD (html2canvas + jsPDF)
+        ============================================================ */
+        async function downloadPDF() {
+            let emptyCount = 0;
+            document.querySelectorAll('.resizable-box img').forEach(img => {
+                if (!img.src || img.src === window.location.href || img.style.display === 'none') {
+                    emptyCount++;
+                }
+            });
+            if (emptyCount > 0) {
+                if (!confirm(`⚠️ ${emptyCount} खाली फोटो डिब्बे मौजूद हैं। फिर भी PDF बनाएं?`)) return;
+            }
+
+            if (!window.html2canvas || !window.jspdf) {
+                showToast('❌ PDF library लोड नहीं हुई। Internet connection check करें।', 'error', 6000);
+                return;
+            }
+
+            const btn = document.getElementById('btn-pdf');
+            btn.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.textContent = '⏳ बन रहा है...';
+
+            const previousScale = currentScale;
+            wrapper.style.transform = "scale(1.0)";
+            await sleep(100);
+
+            document.body.classList.add('pdf-export-mode');
+            await sleep(250);
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pages = document.querySelectorAll('.a4-page');
+
+                for (let i = 0; i < pages.length; i++) {
+                    console.log(`Rendering page ${i + 1} / ${pages.length}...`);
+                    await sleep(100);
+
+                    const canvas = await html2canvas(pages[i], {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: false,
+                        backgroundColor: '#ffffff',
+                        logging: false
+                    });
+
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    if (i > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+                }
+
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2, '0');
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const yyyy = now.getFullYear();
+                const filename = `ABC_Course_Report_${dd}-${mm}-${yyyy}.pdf`;
+
+                pdf.save(filename);
+
+                document.body.classList.remove('pdf-export-mode');
+                wrapper.style.transform = `scale(${previousScale})`;
+
+                showToast(`✅ PDF सेव हुई: ${filename}`, 'success', 5000);
+
+            } catch (err) {
+                console.error('PDF generation error:', err);
+                document.body.classList.remove('pdf-export-mode');
+                wrapper.style.transform = `scale(${previousScale})`;
+                showToast('❌ PDF नहीं बन सका।', 'error', 6000);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        /* ============================================================
+           CLIPBOARD AND PASTE EVENT UTILITIES
+        ============================================================ */
+        async function pasteClipboardToNewPage() {
+            if (!navigator.clipboard || !navigator.clipboard.read) {
+                document.getElementById('multi-file-input').click();
+                return;
+            }
+            try {
+                const clipItems = await navigator.clipboard.read();
+                let hasImage = false;
+                for (const item of clipItems) {
+                    for (const type of item.types) {
+                        if (type.startsWith('image/')) {
+                            const blob = await item.getType(type);
+                            const src = await blobToDataURL(blob);
+                            buildAutoPage([src]);
+                            hasImage = true;
+                            return;
+                        }
+                    }
+                }
+                if (!hasImage) {
+                    document.getElementById('multi-file-input').click();
+                }
+            } catch (_) {
+                document.getElementById('multi-file-input').click();
+            }
+        }
+
+        document.addEventListener('paste', (e) => {
+            const active = document.activeElement;
+            if (active && (
+                active.classList.contains('resizable-box') ||
+                active.getAttribute('contenteditable') === 'true'
+            )) return;
+
+            const items = e.clipboardData ? e.clipboardData.items : [];
+            const imageFiles = [];
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
+                    imageFiles.push(items[i].getAsFile());
+                }
+            }
+            if (imageFiles.length === 0) return;
+
+            e.preventDefault();
+            Promise.all(imageFiles.map(blobToDataURL)).then(srcs => buildAutoPage(srcs));
+        });
+
+        function blobToDataURL(blob) {
+            return new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = e => resolve(e.target.result);
+                r.onerror = reject;
+                r.readAsDataURL(blob);
+            });
+        }
+
+        /* ============================================================
+           DYNAMIC SMART PHOTOS PAGE GENERATION
+        ============================================================ */
+        function buildAutoPage(imageSrcs) {
+            snapshotState();
+            let lastPageEl = null;
+
+            for (let start = 0; start < imageSrcs.length; start += PAGE_LIMIT) {
+                const chunk = imageSrcs.slice(start, start + PAGE_LIMIT);
+                const { pageEl, canvasId } = createPhotoPageElement();
+                wrapper.appendChild(pageEl);
+                lastPageEl = pageEl;
+
+                ; (function (cId, imgs) {
+                    requestAnimationFrame(() => requestAnimationFrame(async () => {
+                        const canvas = document.getElementById(cId);
+                        if (!canvas) return;
+                        const cW = canvas.clientWidth;
+                        const cH = canvas.clientHeight;
+
+                        const ratios = await getImageRatios(imgs);
+                        const { cols, rows } = computeSmartLayout(ratios, cW, cH);
+
+                        const boxW = Math.floor((cW - GAP * (cols + 1)) / cols);
+                        const boxH = Math.floor((cH - GAP * (rows + 1)) / rows);
+
+                        imgs.forEach((src, idx) => {
+                            const col = idx % cols;
+                            const row = Math.floor(idx / cols);
+                            addBoxWithData(cId, {
+                                left: (GAP + col * (boxW + GAP)) + 'px',
+                                top: (GAP + row * (boxH + GAP)) + 'px',
+                                width: boxW + 'px',
+                                height: boxH + 'px',
+                                imgSrc: src, imgDisplay: 'block',
+                                imgX: '0', imgY: '0', imgScale: '1',
+                                imgRotation: '0',
+                                imgTransform: 'translate(0px,0px) scale(1) rotate(0deg)'
+                            });
+                        });
+
+                        updatePageCounter();
+                    }));
+                })(canvasId, chunk);
+            }
+
+            if (lastPageEl) selectPage(lastPageEl);
+            triggerAutoSave();
+        }
+
+        function getImageRatios(srcs) {
+            return Promise.all(srcs.map(src => new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => resolve(img.naturalWidth / img.naturalHeight);
+                img.onerror = () => resolve(1);
+                img.src = src;
+            })));
+        }
+
+        function computeSmartLayout(ratios, cW, cH) {
+            const count = ratios.length;
+            const landscape = ratios.filter(r => r > 1.2).length;
+            const portrait = ratios.filter(r => r < 0.8).length;
+
+            if (portrait > landscape && portrait >= Math.ceil(count / 2)) {
+                return getPortraitGrid(count);
+            }
+            if (landscape > portrait && landscape >= Math.ceil(count / 2)) {
+                return getLandscapeGrid(count);
+            }
+            return getBalancedGrid(count);
+        }
+
+        function getPortraitGrid(n) {
+            if (n <= 1) return { cols: 1, rows: 1 };
+            if (n <= 2) return { cols: 2, rows: 1 };
+            if (n <= 4) return { cols: 2, rows: 2 };
+            if (n <= 6) return { cols: 2, rows: 3 };
+            return { cols: 3, rows: 3 };
+        }
+
+        function getLandscapeGrid(n) {
+            if (n <= 1) return { cols: 1, rows: 1 };
+            if (n <= 2) return { cols: 2, rows: 1 };
+            if (n <= 3) return { cols: 3, rows: 1 };
+            if (n <= 4) return { cols: 2, rows: 2 };
+            if (n <= 6) return { cols: 3, rows: 2 };
+            return { cols: 3, rows: 3 };
+        }
+
+        function getBalancedGrid(n) {
+            if (n <= 1) return { cols: 1, rows: 1 };
+            if (n <= 2) return { cols: 2, rows: 1 };
+            if (n <= 3) return { cols: 3, rows: 1 };
+            if (n <= 4) return { cols: 2, rows: 2 };
+            if (n <= 6) return { cols: 3, rows: 2 };
+            if (n <= 9) return { cols: 3, rows: 3 };
+            if (n <= 12) return { cols: 4, rows: 3 };
+            return { cols: 4, rows: 4 };
+        }
+
+        /* ============================================================
+           CREATE PROTO-ELEMENTS
+        ============================================================ */
+        function createPhotoPageElement(existingId) {
+            const pageId = existingId ||
+                ('canvas-' + Date.now() + '-' + Math.floor(Math.random() * 9999));
+
+            const page = document.createElement('div');
+            page.className = 'a4-page';
+            page.innerHTML = `
+                <div class="inner-border-canvas" id="${pageId}">
+                    <div class="add-box-controls" data-canvas="${pageId}">
+                        <button class="add-box-btn-inner file-btn">📁 फोटो चुनें</button>
+                        <button class="add-box-btn-inner clip-btn">📋 पेस्ट करें</button>
+                    </div>
+                </div>
+                <div class="page-label">📷 पेज — 0 फोटो</div>
+            `;
+
+            page.addEventListener('mousedown', function (e) { selectPage(this, e); });
+            page.addEventListener('touchstart', function (e) { selectPage(this, e); });
+
+            page.querySelector('.file-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                openFilePicker(pageId);
+            });
+
+            page.querySelector('.clip-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                pasteFromClipboard(pageId);
+            });
+
+            return { pageEl: page, canvasId: pageId };
+        }
+
+        function addPhotoPage() {
+            snapshotState();
+            const { pageEl, canvasId } = createPhotoPageElement();
+            wrapper.appendChild(pageEl);
+            selectPage(pageEl);
+            openFilePicker(canvasId);
+            updatePageCounter();
+            triggerAutoSave();
+        }
+
+        async function pasteFromClipboard(canvasId) {
+            if (!navigator.clipboard || !navigator.clipboard.read) {
+                openFilePicker(canvasId);
+                return;
+            }
+            try {
+                const clipItems = await navigator.clipboard.read();
+                let hasImage = false;
+                for (const item of clipItems) {
+                    for (const type of item.types) {
+                        if (type.startsWith('image/')) {
+                            const blob = await item.getType(type);
+                            const src = await blobToDataURL(blob);
+                            insertImageAsBox(canvasId, src);
+                            hasImage = true;
+                            return;
+                        }
+                    }
+                }
+                if (!hasImage) {
+                    openFilePicker(canvasId);
+                }
+            } catch (_) {
+                openFilePicker(canvasId);
+            }
+        }
+
+        function openFilePicker(canvasId) {
+            const tmp = document.createElement('input');
+            tmp.type = 'file';
+            tmp.accept = 'image/*';
+            tmp.multiple = true;
+            tmp.style.display = 'none';
+            document.body.appendChild(tmp);
+
+            tmp.addEventListener('change', () => {
+                const files = Array.from(tmp.files || []);
+                document.body.removeChild(tmp);
+                if (files.length === 0) return;
+
+                Promise.all(files.map(blobToDataURL)).then(srcs => {
+                    srcs.forEach(src => insertImageAsBox(canvasId, src));
+                });
+            });
+
+            tmp.click();
+        }
+
+        /* ============================================================
+           INSERTING AND DESIGNING BOX WITH DATA
+        ============================================================ */
+        function insertImageAsBox(canvasId, src) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const tmp = new Image();
+            tmp.onload = () => {
+                const imgW = tmp.naturalWidth || 1;
+                const imgH = tmp.naturalHeight || 1;
+                const ratio = imgW / imgH;
+
+                const cW = canvas.clientWidth || 600;
+                const cH = canvas.clientHeight || 400;
+
+                const maxW = Math.floor(cW * 0.65);
+                const maxH = Math.floor(cH * 0.65);
+
+                let boxW, boxH;
+                if (ratio >= 1) {
+                    boxW = maxW;
+                    boxH = Math.round(boxW / ratio);
+                    if (boxH > maxH) { boxH = maxH; boxW = Math.round(boxH * ratio); }
+                } else {
+                    boxH = maxH;
+                    boxW = Math.round(boxH * ratio);
+                    if (boxW > maxW) { boxW = maxW; boxH = Math.round(boxW / ratio); }
+                }
+
+                boxW = Math.max(boxW, MIN_BOX_W);
+                boxH = Math.max(boxH, MIN_BOX_H);
+
+                const existingCount = canvas.querySelectorAll('.resizable-box').length;
+                const cascade = (existingCount % 6) * 22;
+                const left = Math.max(GAP, Math.round((cW - boxW) / 2) - cascade);
+                const top = Math.max(GAP, Math.round((cH - boxH) / 2) - cascade);
+
+                snapshotState();
+                addBoxWithData(canvasId, {
+                    left: left + 'px',
+                    top: top + 'px',
+                    width: boxW + 'px',
+                    height: boxH + 'px',
+                    imgSrc: src, imgDisplay: 'block',
+                    imgX: '0', imgY: '0', imgScale: '1', imgRotation: '0',
+                    imgTransform: 'translate(0px,0px) scale(1) rotate(0deg)'
+                });
+            };
+            tmp.src = src;
+        }
+
+        function addBoxWithData(canvasId, data) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const box = document.createElement('div');
+            box.className = 'resizable-box';
+            box.style.cssText = [
+                `left:${data.left || '60px'}`,
+                `top:${data.top || '60px'}`,
+                `width:${data.width || '250px'}`,
+                `height:${data.height || '180px'}`
+            ].join(';');
+            box.tabIndex = 0;
+
+            const inputId = 'file-' + Math.random().toString(36).substr(2, 9);
+            const hasImg = data.imgDisplay === 'block' && !!data.imgSrc;
+            const lblStyle = hasImg ? 'display:none' : '';
+            const imgStyle = hasImg ? '' : 'display:none';
+
+            let safeSrc = data.imgSrc || '';
+            if (!safeSrc || safeSrc === window.location.href) {
+                safeSrc = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+            }
+
+            box.innerHTML = `
+                <div class="move-handle" title="खींचकर move करें">▬ ▬ ▬ &nbsp; DRAG &nbsp; ▬ ▬ ▬</div>
+                <div class="delete-btn"  title="हटाएं (Del key)">✕</div>
+                <div class="rotate-btn"  title="90° घुमाएं (R key)">↻</div>
+                <div class="box-content">
+                    <label for="${inputId}" class="upload-label" style="${lblStyle}">
+                        📁 CLICK TO UPLOAD<br>
+                        <small style="font-weight:normal;color:#95a5a6;">(या Ctrl+V paste करें)</small>
+                    </label>
+                    <input type="file" id="${inputId}" hidden accept="image/*">
+                    <img src="${safeSrc}" style="${imgStyle}"
+                         data-x="${data.imgX || 0}" data-y="${data.imgY || 0}"
+                         data-scale="${data.imgScale || 1}" data-rotation="${data.imgRotation || 0}">
+                </div>
+                <div class="resizer tl"></div><div class="resizer tr"></div>
+                <div class="resizer bl"></div><div class="resizer br"></div>
+                <div class="resizer t"></div><div class="resizer b"></div>
+                <div class="resizer l"></div><div class="resizer r"></div>
+            `;
+
+            const img = box.querySelector('img');
+            const label = box.querySelector('.upload-label');
+            const input = box.querySelector('input[type=file]');
+
+            if (hasImg) {
+                img.style.display = 'block';
+                img.style.transform = data.imgTransform ||
+                    `translate(${data.imgX || 0}px,${data.imgY || 0}px) scale(${data.imgScale || 1}) rotate(${data.imgRotation || 0}deg)`;
+            }
+
+            input.addEventListener('change', () => {
+                if (!input.files[0]) return;
+                loadFileIntoBox(input.files[0], img, label, box, canvasId);
+            });
+
+            box.querySelector('.delete-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteBox(box, canvasId);
+            });
+
+            box.querySelector('.rotate-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                rotateImage(img);
+            });
+
+            box.addEventListener('mousedown', (e) => selectBox(box));
+            box.addEventListener('touchstart', (e) => selectBox(box));
+            box.addEventListener('paste', (e) => handleBoxPaste(e, img, label, box, canvasId));
+            box.addEventListener('mouseup', triggerAutoSave);
+
+            img.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+                fitImageToBox(img);
+            });
+
+            canvas.appendChild(box);
+            makeDraggable(box);
+            makeResizable(box);
+            setupImageInteractions(img);
+            updatePageCounter();
+            selectBox(box);
+        }
+
+        function deleteBox(box, canvasId) {
+            snapshotState();
+            box.remove();
+            triggerAutoSave();
+            updatePageCounter();
+            showToast('🗑️ डिब्बा हटाया गया — वापस लाने के लिए Ctrl+Z दबाएं', 'info', 2500);
+        }
+
+        /* ============================================================
+           KEYBOARD SHORTCUTS ENGINE
+        ============================================================ */
+        document.addEventListener('keydown', (e) => {
+            const active = document.activeElement;
+
+            if (e.ctrlKey && (e.key === 'b' || e.key === 'B')) {
+                e.preventDefault();
+                document.execCommand('bold', false, null);
+                return;
+            }
+
+            if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
+                if (active && (active.isContentEditable || active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+                e.preventDefault();
+                undo();
+                return;
+            }
+            if (e.ctrlKey && (e.key === 'y' || e.key === 'Y')) {
+                if (active && (active.isContentEditable || active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+                e.preventDefault();
+                redo();
+                return;
+            }
+
+            if (!active || !active.classList.contains('resizable-box')) return;
+            const canvas = active.closest('.inner-border-canvas');
+
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (canvas) deleteBox(active, canvas.id);
+                return;
+            }
+
+            const STEP = e.shiftKey ? 20 : 5;
+            let moved = false;
+
+            if (e.key.startsWith('Arrow')) {
+                if (!window._isArrowMoving) {
+                    snapshotState();
+                    window._isArrowMoving = true;
+                }
+                clearTimeout(window._arrowMoveTimer);
+                window._arrowMoveTimer = setTimeout(() => {
+                    window._isArrowMoving = false;
+                }, 500);
+            }
+
+            if (e.key === 'ArrowLeft') { active.style.left = (parseFloat(active.style.left) || 0) - STEP + 'px'; moved = true; }
+            if (e.key === 'ArrowRight') { active.style.left = (parseFloat(active.style.left) || 0) + STEP + 'px'; moved = true; }
+            if (e.key === 'ArrowUp') { active.style.top = (parseFloat(active.style.top) || 0) - STEP + 'px'; moved = true; }
+            if (e.key === 'ArrowDown') { active.style.top = (parseFloat(active.style.top) || 0) + STEP + 'px'; moved = true; }
+            if (moved) { e.preventDefault(); triggerAutoSave(); return; }
+
+            if (e.key === 'r' || e.key === 'R') {
+                const img = active.querySelector('img');
+                if (img && img.style.display !== 'none') rotateImage(img);
+            }
+        });
+
+        /* ============================================================
+           IMAGE TRANSFORM UTILS
+        ============================================================ */
+        function applyImageTransform(img) {
+            const x = img.dataset.x || 0;
+            const y = img.dataset.y || 0;
+            const s = img.dataset.scale || 1;
+            const rot = img.dataset.rotation || 0;
+            img.style.transform = `translate(${x}px,${y}px) scale(${s}) rotate(${rot}deg)`;
+        }
+
+        function rotateImage(img) {
+            snapshotState();
+            let rot = parseFloat(img.dataset.rotation || 0) + 90;
+            if (rot >= 360) rot = 0;
+            img.dataset.rotation = rot;
+            applyImageTransform(img);
+            triggerAutoSave();
+        }
+
+        function fitImageToBox(img) {
+            snapshotState();
+            img.dataset.x = 0; img.dataset.y = 0;
+            img.dataset.scale = 1; img.dataset.rotation = 0;
+            applyImageTransform(img);
+            triggerAutoSave();
+            showToast('🔲 Image स्थिति रीसेट की गई', 'success', 1500);
+        }
+
+        function loadFileIntoBox(file, img, label, box, canvasId) {
+            blobToDataURL(file).then(src => {
+                const canvas = document.getElementById(canvasId);
+                const tmp = new Image();
+                tmp.onload = () => {
+                    const imgW = tmp.naturalWidth || 1;
+                    const imgH = tmp.naturalHeight || 1;
+                    const ratio = imgW / imgH;
+
+                    const cW = canvas ? canvas.clientWidth : 600;
+                    const cH = canvas ? canvas.clientHeight : 400;
+                    const maxW = Math.floor(cW * 0.65);
+                    const maxH = Math.floor(cH * 0.65);
+
+                    let boxW, boxH;
+                    if (ratio >= 1) {
+                        boxW = maxW;
+                        boxH = Math.round(boxW / ratio);
+                        if (boxH > maxH) { boxH = maxH; boxW = Math.round(boxH * ratio); }
+                    } else {
+                        boxH = maxH;
+                        boxW = Math.round(boxH * ratio);
+                        if (boxW > maxW) { boxW = maxW; boxH = Math.round(boxW / ratio); }
+                    }
+                    boxW = Math.max(boxW, MIN_BOX_W);
+                    boxH = Math.max(boxH, MIN_BOX_H);
+
+                    snapshotState();
+                    box.style.width = boxW + 'px';
+                    box.style.height = boxH + 'px';
+
+                    img.src = src;
+                    img.style.display = 'block';
+                    label.style.display = 'none';
+                    img.dataset.x = 0; img.dataset.y = 0;
+                    img.dataset.scale = 1; img.dataset.rotation = 0;
+                    applyImageTransform(img);
+                    triggerAutoSave();
+                };
+                tmp.src = src;
+            });
+        }
+
+        function handleBoxPaste(e, img, label, box, canvasId) {
+            const items = e.clipboardData ? e.clipboardData.items : [];
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    loadFileIntoBox(items[i].getAsFile(), img, label, box, canvasId);
+                    break;
+                }
+            }
+        }
+
+        /* ============================================================
+           DRAG & RESIZE ENGINE
+        ============================================================ */
+        function makeDraggable(el) {
+            const handle = el.querySelector('.move-handle');
+
+            function handleStart(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                const startX = clientX - el.offsetLeft;
+                const startY = clientY - el.offsetTop;
+                let hasMoved = false;
+
+                function onMove(ev) {
+                    if (!hasMoved) {
+                        snapshotState();
+                        hasMoved = true;
+                    }
+                    const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+                    const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                    el.style.left = (cx - startX) + 'px';
+                    el.style.top = (cy - startY) + 'px';
+                }
+                function onUp() {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onUp);
+                    triggerAutoSave();
+                }
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onUp);
+            }
+
+            handle.addEventListener('mousedown', handleStart);
+            handle.addEventListener('touchstart', handleStart, { passive: false });
+        }
+
+        function makeResizable(el) {
+            el.querySelectorAll('.resizer').forEach(resizer => {
+                function handleStart(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                    const startW = el.offsetWidth, startH = el.offsetHeight;
+                    const startX = clientX, startY = clientY;
+                    const startL = el.offsetLeft, startT = el.offsetTop;
+                    let hasMoved = false;
+
+                    const cls = resizer.classList;
+                    const isN = cls.contains('t') || cls.contains('tl') || cls.contains('tr');
+                    const isS = cls.contains('b') || cls.contains('bl') || cls.contains('br');
+                    const isW = cls.contains('l') || cls.contains('tl') || cls.contains('bl');
+                    const isE = cls.contains('r') || cls.contains('tr') || cls.contains('br');
+
+                    function onMove(ev) {
+                        if (!hasMoved) {
+                            snapshotState();
+                            hasMoved = true;
+                        }
+                        const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+                        const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                        const dx = cx - startX;
+                        const dy = cy - startY;
+
+                        if (isE) {
+                            el.style.width = Math.max(MIN_BOX_W, startW + dx) + 'px';
+                        }
+                        if (isS) {
+                            el.style.height = Math.max(MIN_BOX_H, startH + dy) + 'px';
+                        }
+                        if (isW) {
+                            const newW = Math.max(MIN_BOX_W, startW - dx);
+                            el.style.width = newW + 'px';
+                            el.style.left = (startL + startW - newW) + 'px';
+                        }
+                        if (isN) {
+                            const newH = Math.max(MIN_BOX_H, startH - dy);
+                            el.style.height = newH + 'px';
+                            el.style.top = (startT + startH - newH) + 'px';
+                        }
+                    }
+                    function onUp() {
+                        document.removeEventListener('mousemove', onMove);
+                        document.removeEventListener('mouseup', onUp);
+                        document.removeEventListener('touchmove', onMove);
+                        document.removeEventListener('touchend', onUp);
+                        if (hasMoved) triggerAutoSave();
+                    }
+
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                    document.addEventListener('touchmove', onMove, { passive: false });
+                    document.addEventListener('touchend', onUp);
+                }
+
+                resizer.addEventListener('mousedown', handleStart);
+                resizer.addEventListener('touchstart', handleStart, { passive: false });
+            });
+        }
+
+        /* ============================================================
+           IMAGE PINCH/SCROLL ZOOM & PAN ENGINE
+        ============================================================ */
+        function setupImageInteractions(img) {
+            const content = img.parentElement;
+
+            let wheelTimeout = null;
+            let isWheeling = false;
+
+            content.addEventListener('wheel', (e) => {
+                const box = img.closest('.resizable-box');
+                if (!box.classList.contains('selected-box')) {
+                    selectBox(box);
+                    return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!isWheeling) {
+                    snapshotState();
+                    isWheeling = true;
+                }
+
+                clearTimeout(wheelTimeout);
+                wheelTimeout = setTimeout(() => {
+                    isWheeling = false;
+                    triggerAutoSave();
+                }, 300);
+
+                let s = parseFloat(img.dataset.scale || 1) - (e.deltaY * ZOOM_SPEED);
+                img.dataset.scale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, s));
+                applyImageTransform(img);
+            }, { passive: false });
+
+            // Pinch zoom on Touch Displays
+            let initialDistance = null;
+            let initialScale = null;
+            content.addEventListener('touchstart', (e) => {
+                const box = img.closest('.resizable-box');
+                if (!box.classList.contains('selected-box')) {
+                    selectBox(box);
+                    return;
+                }
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    snapshotState();
+                    initialDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    initialScale = parseFloat(img.dataset.scale || 1);
+                }
+            }, { passive: false });
+
+            content.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && initialDistance) {
+                    e.preventDefault();
+                    const currentDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    const s = initialScale * (currentDistance / initialDistance);
+                    img.dataset.scale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, s));
+                    applyImageTransform(img);
+                }
+            }, { passive: false });
+
+            content.addEventListener('touchend', (e) => {
+                if (e.touches.length < 2 && initialDistance !== null) {
+                    initialDistance = null;
+                    triggerAutoSave();
+                }
+            });
+
+            // PANNING MECHANISM
+            function handleStart(e) {
+                if (e.type === 'mousedown' && e.button !== 0) return;
+                if (e.type === 'touchstart' && e.touches.length > 1) return;
+
+                const box = img.closest('.resizable-box');
+                if (!box.classList.contains('selected-box')) {
+                    selectBox(box);
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                const startX = clientX - parseFloat(img.dataset.x || 0);
+                const startY = clientY - parseFloat(img.dataset.y || 0);
+                let hasMoved = false;
+
+                function onMove(ev) {
+                    if (ev.type === 'touchmove' && ev.touches.length > 1) return;
+                    if (!hasMoved) {
+                        snapshotState();
+                        hasMoved = true;
+                    }
+                    const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+                    const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                    img.dataset.x = cx - startX;
+                    img.dataset.y = cy - startY;
+                    applyImageTransform(img);
+                }
+                function onUp() {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onUp);
+                    if (hasMoved) triggerAutoSave();
+                }
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onUp);
+            }
+
+            img.addEventListener('mousedown', handleStart);
+            img.addEventListener('touchstart', handleStart, { passive: false });
+        }
+
+        /* ============================================================
+           DATE INJECTION UTILITY
+        ============================================================ */
+        function injectCurrentDate() {
+            const now = new Date();
+            const dd = String(now.getDate()).padStart(2, '0');
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const yyyy = now.getFullYear();
+
+            const hindiDays = [
+                'रविवार', 'सोमवार', 'मंगलवार',
+                'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'
+            ];
+            const dayName = hindiDays[now.getDay()];
+            const slashDate = `${dd}/${mm}/${yyyy}`;
+            const dashDate = `${dd}-${mm}-${yyyy}`;
+
+            const headerSub = document.getElementById('report-date-header');
+            if (headerSub) {
+                headerSub.textContent =
+                    `ए/बी/सी कोर्स की रिपोर्ट, दिनाँक:- ${slashDate} (${dayName})`;
+            }
+
+            const introEl = document.getElementById('report-intro');
+            if (introEl) {
+                introEl.innerHTML =
+                    `महोदय,<br>\n` +
+                    `आज दिनाँक ${dashDate} को समस्त दलनायकों एवं प्रभारी दलनायकों के नेतृत्व में समस्त दलों को निम्नलिखित व्यवस्थापन पर उपस्थित सभी अधिकारी/कर्मचारी द्वारा ए/बी/सी कोर्स के अंतर्गत कोर्स/पाठ्यक्रम पढ़ाया गया।`;
+            }
+        }
+
+        /* ============================================================
+           INITIALIZATION
+        ============================================================ */
+        window.addEventListener('load', () => {
+            const loaded = loadAllData();
+            const firstPage = wrapper.querySelector('.a4-page');
+            if (firstPage) selectPage(firstPage);
+            updatePageCounter();
+
+            if (!loaded) {
+                injectCurrentDate();
+            }
+
+            snapshotState();
+        });
+    </script>
+</body>
+
+</html>
