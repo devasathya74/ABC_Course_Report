@@ -191,6 +191,14 @@
             border: 1px solid #f59e0b;
         }
 
+        /* New Font Size Buttons */
+        .btn-font-size {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: #38bdf8;
+            border: 1px solid #38bdf8;
+            font-weight: 800;
+        }
+
         /* Theme Selector */
         .theme-select-container {
             display: inline-flex;
@@ -346,8 +354,8 @@
            A4 PAGE BASE (LANDSCAPE)
         ============================================================ */
         .a4-page {
-            width: 297mm;
-            height: 210mm;
+            width: 356mm;
+            height: 280mm;
             background: white;
             position: relative;
             box-sizing: border-box;
@@ -360,7 +368,7 @@
         }
 
         .a4-page.selected-page {
-            outline: 5px solid #f59e0b;
+            outline: 3px solid #f59e0b;
             outline-offset: 8px;
             box-shadow: 0 15px 45px rgba(245, 158, 11, 0.35), 0 4px 15px rgba(0, 0, 0, 0.5);
         }
@@ -402,7 +410,7 @@
             top: 2%;
             left: 9.2%;
             width: 82%;
-            background: linear-gradient(to bottom right, #dc2128 50%, #4ea800 50%);
+            background: linear-gradient(to bottom right, #f42424 50%, #4ea800 50%);
             color: white;
             padding: 8px 20px;
             font-size: 35pt;
@@ -453,6 +461,12 @@
         }
 
         .intro-text {
+            position: absolute;
+            font-size: 16pt;
+            top: 15%;
+            left: 8%;
+            right: 8%;
+            width: 85%;
             font-size: 14pt;
             line-height: 1.35;
             margin-bottom: 10px;
@@ -462,7 +476,12 @@
         }
 
         table {
-            width: 100%;
+            position: absolute;
+            font-size: 14pt;
+            top: 26%;
+            left: 2%;
+            right: 0%;
+            width: 95%;
             border-collapse: collapse;
             background-color: var(--table-bg);
             table-layout: fixed;
@@ -488,10 +507,12 @@
         }
 
         .footer-section {
+            top: 87%;
+            position: absolute;
             margin-top: auto;
             align-self: flex-end;
             width: 440px;
-            font-size: 14pt;
+            font-size: 17pt;
             font-weight: bold;
             line-height: 1.25;
             padding-bottom: 2px;
@@ -535,6 +556,9 @@
             z-index: 10;
             cursor: default;
             outline: none;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .resizable-box::after {
@@ -836,7 +860,7 @@
 
         @media print {
             @page {
-                size: A4 landscape;
+                size: 280 landscape;
                 margin: 0;
             }
 
@@ -874,8 +898,8 @@
             .a4-page {
                 display: block !important;
                 box-shadow: none !important;
-                width: 297mm;
-                height: 209.5mm;
+                width: 356mm;
+                height: 280mm;
                 margin: 0 auto !important;
                 page-break-inside: avoid !important;
                 page-break-after: always !important;
@@ -905,18 +929,52 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
             user-select: none;
         }
+
         .manual-move-btn:hover {
             background: #f59e0b;
             transform: scale(1.15);
         }
-        .manual-move-btn.move-up { top: 5px; left: 50%; transform: translateX(-50%); }
-        .manual-move-btn.move-up:hover { transform: translateX(-50%) scale(1.15); }
-        .manual-move-btn.move-down { bottom: 5px; left: 50%; transform: translateX(-50%); }
-        .manual-move-btn.move-down:hover { transform: translateX(-50%) scale(1.15); }
-        .manual-move-btn.move-left { left: 5px; top: 50%; transform: translateY(-50%); }
-        .manual-move-btn.move-left:hover { transform: translateY(-50%) scale(1.15); }
-        .manual-move-btn.move-right { right: 5px; top: 50%; transform: translateY(-50%); }
-        .manual-move-btn.move-right:hover { transform: translateY(-50%) scale(1.15); }
+
+        .manual-move-btn.move-up {
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .manual-move-btn.move-up:hover {
+            transform: translateX(-50%) scale(1.15);
+        }
+
+        .manual-move-btn.move-down {
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .manual-move-btn.move-down:hover {
+            transform: translateX(-50%) scale(1.15);
+        }
+
+        .manual-move-btn.move-left {
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .manual-move-btn.move-left:hover {
+            transform: translateY(-50%) scale(1.15);
+        }
+
+        .manual-move-btn.move-right {
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .manual-move-btn.move-right:hover {
+            transform: translateY(-50%) scale(1.15);
+        }
+
         .resizable-box:not(.selected-box) .manual-move-btn {
             display: none !important;
         }
@@ -939,7 +997,14 @@
             <button class="master-btn btn-pdf" id="btn-pdf">📄 PDF Download</button>
             <button class="master-btn btn-print" id="btn-print">🖨️ Print Report</button>
             <button class="master-btn btn-clear" id="btn-clear">🔄 डेटा मिटाएं</button>
-            <button class="master-btn btn-bold" id="btn-bold" title="Ctrl+B">𝐁 Bold</button>
+
+            <!-- Text Styling / Font Size buttons -->
+            <button class="master-btn btn-bold" id="btn-bold" title="Select text and click to bold (Ctrl+B)">𝐁
+                Bold</button>
+            <button class="master-btn btn-font-size" id="btn-font-up"
+                title="Increase Font Size of Selection">A+</button>
+            <button class="master-btn btn-font-size" id="btn-font-down"
+                title="Decrease Font Size of Selection">A-</button>
 
             <!-- Dynamic Theme Selector -->
             <div class="theme-select-container">
@@ -954,7 +1019,7 @@
             <div class="scale-control-container">
                 <span>🔍 एडिट ज़ूम:</span>
                 <button class="scale-btn" id="btn-scale-down">-</button>
-                <span id="scale-indicator">100%</span>
+                <span id="scale-indicator">100 </span>
                 <button class="scale-btn" id="btn-scale-up">+</button>
             </div>
 
@@ -968,11 +1033,10 @@
             <b>Select:</b> पेज क्लिक &nbsp;|&nbsp;
             <b>Move Box:</b> काला बार खींचें / Arrow keys &nbsp;|&nbsp;
             <b>Resize Box:</b> कोने खींचें &nbsp;|&nbsp;
-            <b>Image Zoom/Pan:</b> Scroll / Drag &nbsp;|&nbsp;
-            <b>Reset Image:</b> Dbl-click &nbsp;|&nbsp;
+            <b>Image Reset:</b> Dbl-click &nbsp;|&nbsp;
             <b>Rotate:</b> R key / नीला बटन &nbsp;|&nbsp;
-            <b>Bold Text:</b> Ctrl+B &nbsp;|&nbsp;
-            <b>Undo/Redo:</b> Ctrl+Z / Ctrl+Y
+            <b>Text Style:</b> Bold (Ctrl+B), A+ (Font Plus), A- (Font Minus) &nbsp;|&nbsp;
+            <b>Undo:</b> Ctrl+Z
         </div>
     </div>
 
@@ -1009,11 +1073,12 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 6.5%">क्र०सं०</th>
-                            <th style="width: 6%">वाहिनी</th>
-                            <th style="width:10%">दल</th>
-                            <th style="width:21%">दलनायक/प्रभारी का नाम</th>
-                            <th style="width:58%">अध्याय/अभ्यास का विवरण</th>
+                            <th style="width: 12.5mm">क्र०सं०</th>
+                            <th style="width: 16mm">वाहिनी</th>
+                            <th style="width: 16mm">दल</th>
+                            <th style="width: 40mm">दलनायक/प्रभारी का नाम</th>
+                            <th style="width: 90mm">व्यवस्थापन</th>
+                            <th style="width: auto">अध्याय/अभ्यास का विवरण</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1021,52 +1086,68 @@
                             <td contenteditable="true" data-save-id="cell-1-1">01</td>
                             <!-- Rowspan spans over 8 rows perfectly -->
                             <td rowspan="8" contenteditable="true" data-save-id="cell-1-2"
-                                style="font-weight: 800; background-color: #d4e157; vertical-align: middle;">25वीं
+                                style="font-weight: 300; background-color: #d4e157; vertical-align: middle;">25वीं
                                 वाहिनी पीएसी</td>
                             <td contenteditable="true" data-save-id="cell-1-3">ए दल</td>
                             <td contenteditable="true" data-save-id="cell-1-4">सीसी श्री संदीप कुमार शुक्ला</td>
-                            <td contenteditable="true" data-save-id="cell-1-5">कोर्स, कार्य-</td>
+                            <td contenteditable="true" data-save-id="cell-1-5">वाहिनी मुख्यालय 25 वाहिनी पीएसी,
+                                रायबरेली</td>
+                            <td contenteditable="true" data-save-id="cell-1-6">कोर्स, कार्य-</td>
                         </tr>
                         <tr>
                             <td contenteditable="true" data-save-id="cell-2-1">02</td>
                             <td contenteditable="true" data-save-id="cell-2-3">बी दल</td>
                             <td contenteditable="true" data-save-id="cell-2-4">पीसी श्री मानिकचंद्र यादव</td>
+                            <td contenteditable="true" data-save-id="cell-1-5">वाहिनी मुख्यालय 25 वाहिनी पीएसी,
+                                रायबरेली</td>
                             <td contenteditable="true" data-save-id="cell-2-5">कोर्स, कार्य-</td>
                         </tr>
                         <tr>
                             <td contenteditable="true" data-save-id="cell-3-1">03</td>
                             <td contenteditable="true" data-save-id="cell-3-3">सी दल</td>
                             <td contenteditable="true" data-save-id="cell-3-4">सीसी श्री सूर्यनाथ वर्मा</td>
+                            <td contenteditable="true" data-save-id="cell-1-5">वाहिनी मुख्यालय 25 वाहिनी पीएसी,
+                                रायबरेली</td>
                             <td contenteditable="true" data-save-id="cell-3-5">कोर्स, कार्य-</td>
                         </tr>
                         <tr>
                             <td contenteditable="true" data-save-id="cell-4-1">04</td>
                             <td contenteditable="true" data-save-id="cell-4-3">डी दल</td>
                             <td contenteditable="true" data-save-id="cell-4-4">सीसी श्री महेंद्र कुमार यादव</td>
+                            <td contenteditable="true" data-save-id="cell-1-5">वाहिनी मुख्यालय 25 वाहिनी पीएसी,
+                                रायबरेली</td>
                             <td contenteditable="true" data-save-id="cell-4-5">कोर्स, कार्य-</td>
                         </tr>
                         <tr>
                             <td contenteditable="true" data-save-id="cell-5-1">05</td>
                             <td contenteditable="true" data-save-id="cell-5-3">ई दल</td>
                             <td contenteditable="true" data-save-id="cell-5-4">पीसी श्री जय प्रकाश सिंह</td>
+                            <td contenteditable="true" data-save-id="cell-1-5">वाहिनी मुख्यालय 25 वाहिनी पीएसी,
+                                रायबरेली</td>
                             <td contenteditable="true" data-save-id="cell-5-5">कोर्स, कार्य-</td>
                         </tr>
                         <tr>
                             <td contenteditable="true" data-save-id="cell-6-1">06</td>
                             <td contenteditable="true" data-save-id="cell-6-3">एफ दल</td>
                             <td contenteditable="true" data-save-id="cell-6-4">पीसी श्री सुजीत यादव</td>
+                            <td contenteditable="true" data-save-id="cell-1-5">वाहिनी मुख्यालय 25 वाहिनी पीएसी,
+                                रायबरेली</td>
                             <td contenteditable="true" data-save-id="cell-6-5">कोर्स, कार्य-</td>
                         </tr>
                         <tr>
                             <td contenteditable="true" data-save-id="cell-7-1">07</td>
                             <td contenteditable="true" data-save-id="cell-7-3">जी दल</td>
                             <td contenteditable="true" data-save-id="cell-7-4">पीसी श्री फूलचंद्र</td>
+                            <td contenteditable="true" data-save-id="cell-1-5">वाहिनी मुख्यालय 25 वाहिनी पीएसी,
+                                रायबरेली</td>
                             <td contenteditable="true" data-save-id="cell-7-5">कोर्स, कार्य-</td>
                         </tr>
                         <tr>
                             <td contenteditable="true" data-save-id="cell-8-1">08</td>
                             <td contenteditable="true" data-save-id="cell-8-3">एच दल</td>
                             <td contenteditable="true" data-save-id="cell-8-4">पीसी श्री अमित गुप्ता</td>
+                            <td contenteditable="true" data-save-id="cell-1-5">वाहिनी मुख्यालय 25 वाहिनी पीएसी,
+                                रायबरेली</td>
                             <td contenteditable="true" data-save-id="cell-8-5">कोर्स, कार्य-</td>
                         </tr>
                     </tbody>
@@ -1101,8 +1182,6 @@
         const MIN_BOX_H = 80;      // minimum box height
         const PAGE_LIMIT = 6;      // max images per auto-page
         const ZOOM_SPEED = 0.003;   // wheel zoom speed
-        const MAX_ZOOM = 6;
-        const MIN_ZOOM = 0.1;
 
         /* ============================================================
            STATE VARIABLES
@@ -1113,7 +1192,7 @@
         let undoStack = [];
         let redoStack = [];
         const MAX_HISTORY = 15;
-        let currentScale = 1.0;
+        let currentScale = 0.7;
 
         // Undo Image Cache to save base64 memory duplicate in undo/redo actions
         const undoImageCache = new Map();
@@ -1146,9 +1225,23 @@
         document.getElementById('btn-pdf').addEventListener('click', downloadPDF);
         document.getElementById('btn-print').addEventListener('click', () => window.print());
         document.getElementById('btn-clear').addEventListener('click', clearSavedData);
-        document.getElementById('btn-bold').addEventListener('click', () => {
+
+        // Bold and Font Size handlers with mousedown to preserve text selection context
+        document.getElementById('btn-bold').addEventListener('mousedown', (e) => {
+            e.preventDefault(); // Prevents selection loss
             snapshotState();
             document.execCommand('bold', false, null);
+            triggerAutoSave();
+        });
+
+        document.getElementById('btn-font-up').addEventListener('mousedown', (e) => {
+            e.preventDefault(); // Prevents selection loss
+            changeFontSize(true);
+        });
+
+        document.getElementById('btn-font-down').addEventListener('mousedown', (e) => {
+            e.preventDefault(); // Prevents selection loss
+            changeFontSize(false);
         });
 
         document.getElementById('report-page').addEventListener('mousedown', function (e) { selectPage(this, e); });
@@ -1186,6 +1279,57 @@
         });
 
 
+
+        /* ============================================================
+           TEXT EDITOR FONT SIZING ENGINE
+        ============================================================ */
+        function changeFontSize(increase) {
+            snapshotState();
+            const active = document.activeElement;
+
+            // Ensure editing is happening inside contenteditable
+            if (!active || active.getAttribute('contenteditable') !== 'true') {
+                showToast('⚠️ पहले टेक्स्ट बॉक्स में क्लिक करें या टेक्स्ट चुनें', 'warn');
+                return;
+            }
+
+            const selection = window.getSelection();
+            const step = 2; // px increase/decrease amount
+
+            if (!selection.rangeCount || selection.isCollapsed) {
+                // If NO text is specifically selected, apply to the WHOLE active container
+                let currentSize = parseFloat(window.getComputedStyle(active).fontSize) || 16;
+                active.style.fontSize = (currentSize + (increase ? step : -step)) + 'px';
+                triggerAutoSave();
+                return;
+            }
+
+            // Determine base size of selection
+            let node = selection.focusNode;
+            if (node.nodeType === 3) node = node.parentNode;
+            let currentSize = parseFloat(window.getComputedStyle(node).fontSize) || 16;
+            let newSize = currentSize + (increase ? step : -step);
+
+            // Robust inline styling using execCommand + DOM Replacement
+            const marker = 'FONT_MARKER_' + Date.now();
+            document.execCommand("fontName", false, marker);
+
+            const fontTags = active.querySelectorAll(`font[face="${marker}"]`);
+            if (fontTags.length > 0) {
+                fontTags.forEach(font => {
+                    const span = document.createElement('span');
+                    span.style.fontSize = newSize + 'px';
+                    span.innerHTML = font.innerHTML;
+                    font.parentNode.replaceChild(span, font);
+                });
+            } else {
+                // Fallback mechanism just in case browser rejects execCommand
+                let size = parseFloat(window.getComputedStyle(active).fontSize) || 16;
+                active.style.fontSize = (size + (increase ? step : -step)) + 'px';
+            }
+
+            triggerAutoSave();
+        }
 
         /* ============================================================
            WORKSPACE SCALING (ZOOM) CONTROL
@@ -2220,7 +2364,109 @@
            DRAG & RESIZE ENGINE
         ============================================================ */
         function makeDraggable(el) {
-            // Mouse/touch dragging disabled on user request
+            let pressTimer = null;
+            let isDragging = false;
+            let hasMoved = false;
+            let lastPointer = { x: 0, y: 0 };
+            let startX = 0, startY = 0;
+            let initialLeft = 0, initialTop = 0;
+            const PRESS_DURATION = 500;
+
+            function handleStart(e) {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+                const targetCls = e.target.classList;
+                if (e.target.closest('.upload-label') || targetCls.contains('resizer') ||
+                    targetCls.contains('manual-move-btn') || targetCls.contains('delete-btn') ||
+                    targetCls.contains('rotate-btn')) return;
+
+                if (e.type === "touchstart") {
+                    e.preventDefault();
+                }
+
+                lastPointer.x = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                lastPointer.y = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+                isDragging = false;
+                hasMoved = false;
+
+                if (e.pointerType === 'mouse') {
+                    isDragging = true;
+                    selectBox(el);
+                    startX = lastPointer.x;
+                    startY = lastPointer.y;
+                    initialLeft = parseFloat(el.style.left) || 0;
+                    initialTop = parseFloat(el.style.top) || 0;
+                } else {
+                    pressTimer = setTimeout(() => {
+                        isDragging = true;
+                        selectBox(el);
+                        snapshotState();
+
+                        const p = lastPointer;
+                        startX = p.x;
+                        startY = p.y;
+
+                        initialLeft = parseFloat(el.style.left) || 0;
+                        initialTop = parseFloat(el.style.top) || 0;
+
+                        el.style.transition = "none";
+                        el.style.opacity = "0.85";
+                        document.body.style.overflow = "hidden";
+
+                        if (navigator.vibrate) navigator.vibrate(40);
+                    }, PRESS_DURATION);
+                }
+
+                document.addEventListener("pointermove", handleMove, { passive: false });
+                document.addEventListener("pointerup", handleEnd);
+                document.addEventListener("pointercancel", handleEnd);
+            }
+
+            function handleMove(e) {
+                const cx = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                const cy = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+
+                lastPointer.x = cx;
+                lastPointer.y = cy;
+
+                if (!isDragging) {
+                    clearTimeout(pressTimer);
+                    return;
+                }
+
+                if (e.cancelable) e.preventDefault();
+
+                if (!hasMoved) {
+                    if (e.pointerType === 'mouse') snapshotState();
+                    hasMoved = true;
+                }
+
+                const dx = (cx - startX) / currentScale;
+                const dy = (cy - startY) / currentScale;
+
+                el.style.left = (initialLeft + dx) + "px";
+                el.style.top = (initialTop + dy) + "px";
+            }
+
+            function handleEnd(e) {
+                clearTimeout(pressTimer);
+                document.removeEventListener("pointermove", handleMove);
+                document.removeEventListener("pointerup", handleEnd);
+                document.removeEventListener("pointercancel", handleEnd);
+
+                el.style.opacity = "";
+                el.style.transition = "";
+                document.body.style.overflow = "";
+
+                if (hasMoved) {
+                    triggerAutoSave();
+                } else if (!isDragging) {
+                    selectBox(el);
+                }
+            }
+
+            el.addEventListener("pointerdown", handleStart, { passive: false });
+            el.addEventListener("touchstart", handleStart, { passive: false });
         }
 
         function makeResizable(el) {
@@ -2331,6 +2577,7 @@
            INITIALIZATION
         ============================================================ */
         window.addEventListener('load', () => {
+            adjustWorkspaceScale(0); // Initialize scale to 70%
             const loaded = loadAllData();
             const firstPage = wrapper.querySelector('.a4-page');
             if (firstPage) selectPage(firstPage);
