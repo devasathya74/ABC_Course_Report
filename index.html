@@ -396,8 +396,8 @@
            A4 PAGE BASE (LANDSCAPE)
         ============================================================ */
         .a4-page {
-            width: 356mm;
-            height: 280mm;
+            width: var(--page-width, 356mm);
+            height: var(--page-height, 280mm);
             background: white;
             position: relative;
             box-sizing: border-box;
@@ -1146,7 +1146,6 @@
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
-            pointer-events: none;
         }
 
         .cloud-modal-loading {
@@ -1190,6 +1189,36 @@
                     <button class="master-btn btn-paste-page" id="btn-paste-page">📋 Paste Page</button>
                     <button class="master-btn btn-multi-upload" id="btn-multi-upload">🖼️ Multi Upload</button>
                     <button class="master-btn btn-delete-page" id="btn-delete-page">🗑️ Delete</button>
+                </div>
+            </div>
+
+            <!-- Page Size Group -->
+            <div class="control-group">
+                <div class="control-group-label">Size (mm)</div>
+                <div class="control-group-buttons" style="display:flex; align-items:center; gap:4px;">
+                    <span style="font-size:12px; color:#94a3b8;">W:</span>
+                    <button class="master-btn" id="btn-width-down" style="padding:4px 8px; font-size:12px;" title="Decrease Width">-</button>
+                    <span id="label-width" style="font-size:12px; color:white; min-width: 25px; text-align: center;">356</span>
+                    <button class="master-btn" id="btn-width-up" style="padding:4px 8px; font-size:12px;" title="Increase Width">+</button>
+                    
+                    <span style="font-size:12px; color:#94a3b8; margin-left:8px;">H:</span>
+                    <button class="master-btn" id="btn-height-down" style="padding:4px 8px; font-size:12px;" title="Decrease Height">-</button>
+                    <span id="label-height" style="font-size:12px; color:white; min-width: 25px; text-align: center;">280</span>
+                    <button class="master-btn" id="btn-height-up" style="padding:4px 8px; font-size:12px;" title="Increase Height">+</button>
+                </div>
+            </div>
+
+            <!-- Table Columns Group -->
+            <div class="control-group">
+                <div class="control-group-label" title="Column Widths (%)">Table Cols</div>
+                <div class="control-group-buttons" style="display:flex; align-items:center; gap:3px;">
+                    <input type="text" id="col1-width" placeholder="C1" title="Col 1 (क्र०सं०)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                    <input type="text" id="col2-width" placeholder="C2" title="Col 2 (वाहिनी)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                    <input type="text" id="col3-width" placeholder="C3" title="Col 3 (दल)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                    <input type="text" id="col4-width" placeholder="C4" title="Col 4 (दलनायक)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                    <input type="text" id="col5-width" placeholder="C5" title="Col 5 (व्यवस्थापन)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                    <input type="text" id="col6-width" placeholder="C6" title="Col 6 (कोर्स)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                    <input type="text" id="col7-width" placeholder="C7" title="Col 7 (विवरण)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
                 </div>
             </div>
 
@@ -1289,13 +1318,13 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 12.5mm">क्र०सं०</th>
-                            <th style="width: 16mm">वाहिनी</th>
-                            <th style="width: 16mm">दल</th>
-                            <th style="width: 40mm">दलनायक/प्रभारी का नाम</th>
-                            <th style="width: 90mm">व्यवस्थापन</th>
-                            <th style="width: 18mm">कोर्स</th>
-                            <th style="width: auto">अध्याय/अभ्यास का विवरण</th>
+                            <th style="width: var(--col1-width, 12.5mm)">क्र०सं०</th>
+                            <th style="width: var(--col2-width, 16mm)">वाहिनी</th>
+                            <th style="width: var(--col3-width, 16mm)">दल</th>
+                            <th style="width: var(--col4-width, 40mm)">दलनायक/प्रभारी का नाम</th>
+                            <th style="width: var(--col5-width, 90mm)">व्यवस्थापन</th>
+                            <th style="width: var(--col6-width, 18mm)">कोर्स</th>
+                            <th style="width: var(--col7-width, auto)">अध्याय/अभ्यास का विवरण</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1409,7 +1438,7 @@
     ========================================================= -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDQYLPP6HDgyblCC13_wPik-LhIT6h0zr8",
@@ -1431,6 +1460,7 @@
         window.firebaseGetDocs = getDocs;
         window.firebaseQuery = query;
         window.firebaseOrderBy = orderBy;
+        window.firebaseDeleteDoc = deleteDoc;
     </script>
 
     <!-- =========================================================
@@ -1484,6 +1514,44 @@
         /* ============================================================
            EVENT BINDINGS
         ============================================================ */
+        let customPageWidth = parseInt(localStorage.getItem('pageWidth')) || 356;
+        let customPageHeight = parseInt(localStorage.getItem('pageHeight')) || 280;
+
+        function updatePageSizeUI() {
+            document.documentElement.style.setProperty('--page-width', customPageWidth + 'mm');
+            document.documentElement.style.setProperty('--page-height', customPageHeight + 'mm');
+            document.getElementById('label-width').textContent = customPageWidth;
+            document.getElementById('label-height').textContent = customPageHeight;
+            localStorage.setItem('pageWidth', customPageWidth);
+            localStorage.setItem('pageHeight', customPageHeight);
+        }
+
+        document.getElementById('btn-width-down').addEventListener('click', () => { customPageWidth -= 2; updatePageSizeUI(); });
+        document.getElementById('btn-width-up').addEventListener('click', () => { customPageWidth += 2; updatePageSizeUI(); });
+        document.getElementById('btn-height-down').addEventListener('click', () => { customPageHeight -= 2; updatePageSizeUI(); });
+        document.getElementById('btn-height-up').addEventListener('click', () => { customPageHeight += 2; updatePageSizeUI(); });
+        updatePageSizeUI();
+
+        for (let i = 1; i <= 7; i++) {
+            const input = document.getElementById(`col${i}-width`);
+            const saved = localStorage.getItem(`col${i}Width`);
+            if (saved) {
+                input.value = saved;
+                document.documentElement.style.setProperty(`--col${i}-width`, saved.includes('%') || saved.includes('mm') || saved.includes('px') || saved === 'auto' ? saved : saved + '%');
+            }
+            input.addEventListener('input', (e) => {
+                let val = e.target.value.trim();
+                if (val && !isNaN(val)) val += '%';
+                if (!val) {
+                    document.documentElement.style.removeProperty(`--col${i}-width`);
+                    localStorage.removeItem(`col${i}Width`);
+                } else {
+                    document.documentElement.style.setProperty(`--col${i}-width`, val);
+                    localStorage.setItem(`col${i}Width`, e.target.value.trim());
+                }
+            });
+        }
+
         document.getElementById('btn-undo').addEventListener('click', undo);
         document.getElementById('btn-redo').addEventListener('click', redo);
         document.getElementById('btn-add-page').addEventListener('click', addPhotoPage);
@@ -1975,6 +2043,11 @@
                 return;
             }
 
+            // Automatically backup to Firestore before generating PDF
+            if (window.firebaseDB && typeof backupToFirestore === 'function') {
+                backupToFirestore().catch(e => console.error("Auto backup failed:", e));
+            }
+
             const btn = document.getElementById('btn-pdf');
             btn.disabled = true;
             const originalText = btn.innerHTML;
@@ -2092,10 +2165,38 @@
 
         function blobToDataURL(blob) {
             return new Promise((resolve, reject) => {
-                const r = new FileReader();
-                r.onload = e => resolve(e.target.result);
-                r.onerror = reject;
-                r.readAsDataURL(blob);
+                const img = new Image();
+                const url = URL.createObjectURL(blob);
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1200;
+                    const MAX_HEIGHT = 1200;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    reject(new Error("Failed to load image"));
+                };
+                img.src = url;
             });
         }
 
@@ -2929,11 +3030,20 @@
                             <div class="cloud-backup-date">${data.dateString || new Date(data.updatedAt).toLocaleString()}</div>
                             <div class="cloud-backup-meta">${data.totalPages} Pages Saved</div>
                         </div>
-                        <button class="cloud-backup-action">Load</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="cloud-backup-action btn-load">Load</button>
+                            <button class="cloud-backup-action btn-delete" style="background:#ef4444;">Delete</button>
+                        </div>
                     `;
                     item.addEventListener('click', () => {
                         modal.classList.remove('active');
                         loadFromFirestore(doc.id);
+                    });
+                    
+                    const deleteBtn = item.querySelector('.btn-delete');
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteFromFirestore(doc.id, item);
                     });
                     listEl.appendChild(item);
                 });
@@ -2976,6 +3086,27 @@
             } catch (error) {
                 console.error("Firestore Load Error:", error);
                 showToast('Cloud Load Failed! See console.', 'error');
+            }
+        }
+
+        async function deleteFromFirestore(reportId, itemElement) {
+            if (!confirm('क्या आप सच में इस बैकअप को डिलीट करना चाहते हैं?')) return;
+            try {
+                showToast('Deleting backup...', 'info');
+                const pagesRef = window.firebaseCollection(window.firebaseDB, `reports/${reportId}/pages`);
+                const snapshot = await window.firebaseGetDocs(pagesRef);
+                const docs = snapshot.docs;
+                for (const d of docs) {
+                    await window.firebaseDeleteDoc(d.ref);
+                }
+                const reportRef = window.firebaseDoc(window.firebaseDB, 'reports', reportId);
+                await window.firebaseDeleteDoc(reportRef);
+
+                showToast('बैकअप डिलीट हो गया!', 'success');
+                if (itemElement) itemElement.remove();
+            } catch (error) {
+                console.error("Firestore Delete Error:", error);
+                showToast('Delete Failed!', 'error');
             }
         }
 
