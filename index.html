@@ -95,23 +95,65 @@
         .master-controls {
             background: linear-gradient(135deg, #090d16 0%, #141e30 100%);
             width: 100%;
-            padding: 12px 24px;
+            padding: 16px 24px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             position: sticky;
             top: 0;
             z-index: 5000;
-            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.8);
-            border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
         }
 
         .controls-row {
             display: flex;
             justify-content: center;
-            align-items: center;
-            gap: 10px;
+            align-items: stretch;
+            gap: 16px;
             flex-wrap: wrap;
+        }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+
+        .control-group:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .control-group-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            width: 100%;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 4px;
+            margin-bottom: 2px;
+        }
+
+        .control-group-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            height: 100%;
         }
 
         .master-btn {
@@ -977,6 +1019,142 @@
         .resizable-box:not(.selected-box) .manual-move-btn {
             display: none !important;
         }
+
+        /* ============================================================
+           CLOUD LOAD MODAL
+        ============================================================ */
+        .cloud-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .cloud-modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .cloud-modal-content {
+            background: #1e293b;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .cloud-modal-overlay.active .cloud-modal-content {
+            transform: scale(1);
+        }
+
+        .cloud-modal-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #090d16, #141e30);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cloud-modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #38bdf8;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cloud-modal-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            transition: color 0.2s;
+        }
+
+        .cloud-modal-close:hover {
+            color: #ef4444;
+        }
+
+        .cloud-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .cloud-backup-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cloud-backup-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+        }
+
+        .cloud-backup-date {
+            font-size: 15px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .cloud-backup-meta {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .cloud-backup-action {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            pointer-events: none;
+        }
+
+        .cloud-modal-loading {
+            text-align: center;
+            padding: 30px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -987,56 +1165,95 @@
     ========================================================= -->
     <div class="master-controls" role="toolbar" aria-label="मुख्य नियंत्रण">
         <div class="controls-row">
-            <button class="master-btn btn-clear" id="btn-undo" title="Undo (Ctrl+Z)" disabled>↩️ Undo</button>
-            <button class="master-btn btn-clear" id="btn-redo" title="Redo (Ctrl+Y)" disabled>↪️ Redo</button>
-            <button class="master-btn btn-add-page" id="btn-add-page">📄 नया फोटो पेज</button>
-            <button class="master-btn btn-paste-page" id="btn-paste-page">📋 Clipboard पेज</button>
-            <button class="master-btn btn-multi-upload" id="btn-multi-upload">🖼️ Multi Upload</button>
-            <button class="master-btn btn-delete-page" id="btn-delete-page">🗑️ पेज हटाएं</button>
-            <button class="master-btn btn-pdf" id="btn-pdf">📄 PDF Download</button>
-            <button class="master-btn btn-print" id="btn-print">🖨️ Print Report</button>
-            <button class="master-btn btn-clear" id="btn-clear">🔄 डेटा मिटाएं</button>
 
-            <!-- Text Styling / Font Size buttons -->
-            <button class="master-btn btn-bold" id="btn-bold" title="Select text and click to bold (Ctrl+B)">𝐁
-                Bold</button>
-            <button class="master-btn btn-font-size" id="btn-font-up"
-                title="Increase Font Size of Selection">A+</button>
-            <button class="master-btn btn-font-size" id="btn-font-down"
-                title="Decrease Font Size of Selection">A-</button>
-
-            <!-- Dynamic Theme Selector -->
-            <div class="theme-select-container">
-                <span class="theme-select-label">🎨 थीम:</span>
-                <select id="theme-selector" class="theme-select">
-                    <option value="default" selected>सतरंगी (Rainbow)</option>
-                    <option value="theme-formal">प्रशासनिक (Navy/Gold)</option>
-                </select>
+            <!-- History & Cloud Group -->
+            <div class="control-group">
+                <div class="control-group-label">History & Cloud</div>
+                <div class="control-group-buttons">
+                    <button class="master-btn btn-clear" id="btn-undo" title="Undo (Ctrl+Z)" disabled>↩️</button>
+                    <button class="master-btn btn-clear" id="btn-redo" title="Redo (Ctrl+Y)" disabled>↪️</button>
+                    <button class="master-btn btn-cloud-save" id="btn-cloud-save"
+                        style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;"
+                        title="Save to Cloud">☁️ Save</button>
+                    <button class="master-btn btn-cloud-load" id="btn-cloud-load"
+                        style="background: linear-gradient(135deg, #10b981, #059669); color: white;"
+                        title="Load from Cloud">☁️ Load</button>
+                    <button class="master-btn btn-clear" id="btn-clear" title="Clear Data">🔄 Clear</button>
+                </div>
             </div>
 
-            <!-- Preview Scaler Slider -->
-            <div class="scale-control-container">
-                <span>🔍 एडिट ज़ूम:</span>
-                <button class="scale-btn" id="btn-scale-down">-</button>
-                <span id="scale-indicator">100 </span>
-                <button class="scale-btn" id="btn-scale-up">+</button>
+            <!-- Page Management Group -->
+            <div class="control-group">
+                <div class="control-group-label">Pages</div>
+                <div class="control-group-buttons">
+                    <button class="master-btn btn-add-page" id="btn-add-page">📄 New Page</button>
+                    <button class="master-btn btn-paste-page" id="btn-paste-page">📋 Paste Page</button>
+                    <button class="master-btn btn-multi-upload" id="btn-multi-upload">🖼️ Multi Upload</button>
+                    <button class="master-btn btn-delete-page" id="btn-delete-page">🗑️ Delete</button>
+                </div>
             </div>
 
-            <span class="page-counter" id="page-counter" aria-live="polite">📃 1 पेज</span>
+            <!-- Export Group -->
+            <div class="control-group">
+                <div class="control-group-label">Export</div>
+                <div class="control-group-buttons">
+                    <button class="master-btn btn-pdf" id="btn-pdf">📄 PDF</button>
+                    <button class="master-btn btn-print" id="btn-print">🖨️ Print</button>
+                </div>
+            </div>
+
+            <!-- Formatting Group -->
+            <div class="control-group">
+                <div class="control-group-label">Format</div>
+                <div class="control-group-buttons">
+                    <button class="master-btn btn-bold" id="btn-bold" title="Select text and click to bold (Ctrl+B)">𝐁
+                        Bold</button>
+                    <button class="master-btn btn-font-size" id="btn-font-up"
+                        title="Increase Font Size of Selection">A+</button>
+                    <button class="master-btn btn-font-size" id="btn-font-down"
+                        title="Decrease Font Size of Selection">A-</button>
+                </div>
+            </div>
+
+            <!-- View Settings Group -->
+            <div class="control-group">
+                <div class="control-group-label">View</div>
+                <div class="control-group-buttons">
+                    <div class="theme-select-container">
+                        <span class="theme-select-label">🎨</span>
+                        <select id="theme-selector" class="theme-select">
+                            <option value="default" selected>सतरंगी (Rainbow)</option>
+                            <option value="theme-formal">प्रशासनिक (Navy/Gold)</option>
+                        </select>
+                    </div>
+                    <div class="scale-control-container">
+                        <span>🔍</span>
+                        <button class="scale-btn" id="btn-scale-down">-</button>
+                        <span id="scale-indicator">100 </span>
+                        <button class="scale-btn" id="btn-scale-up">+</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1400px; margin: 8px auto 0 auto; padding: 0 20px;">
+            <div class="info-text" style="margin: 0;">
+                <b>Select:</b> Page Click &nbsp;|&nbsp;
+                <b>Move Box:</b> Black Bar / Arrows &nbsp;|&nbsp;
+                <b>Resize:</b> Corners &nbsp;|&nbsp;
+                <b>Rotate:</b> R key / Blue Btn &nbsp;|&nbsp;
+                <b>Style:</b> Ctrl+B, A+, A- &nbsp;|&nbsp;
+                <b>Undo:</b> Ctrl+Z
+            </div>
+            <span class="page-counter" id="page-counter" aria-live="polite"
+                style="margin: 0; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px;">📃 1
+                पेज</span>
         </div>
 
         <!-- Hidden file input -->
         <input type="file" id="multi-file-input" multiple accept="image/*" hidden>
-
-        <div class="info-text">
-            <b>Select:</b> पेज क्लिक &nbsp;|&nbsp;
-            <b>Move Box:</b> काला बार खींचें / Arrow keys &nbsp;|&nbsp;
-            <b>Resize Box:</b> कोने खींचें &nbsp;|&nbsp;
-            <b>Image Reset:</b> Dbl-click &nbsp;|&nbsp;
-            <b>Rotate:</b> R key / नीला बटन &nbsp;|&nbsp;
-            <b>Text Style:</b> Bold (Ctrl+B), A+ (Font Plus), A- (Font Minus) &nbsp;|&nbsp;
-            <b>Undo:</b> Ctrl+Z
-        </div>
     </div>
 
     <!-- =========================================================
@@ -1172,7 +1389,49 @@
     </div>
 
     <!-- Toast container -->
+    <!-- Cloud Load Modal -->
+    <div class="cloud-modal-overlay" id="cloud-modal">
+        <div class="cloud-modal-content">
+            <div class="cloud-modal-header">
+                <h3 class="cloud-modal-title">☁️ Version History</h3>
+                <button class="cloud-modal-close" id="cloud-modal-close">&times;</button>
+            </div>
+            <div class="cloud-modal-body" id="cloud-modal-list">
+                <div class="cloud-modal-loading">Loading backups...</div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+    <!-- =========================================================
+         FIREBASE SDK SETUP
+    ========================================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQYLPP6HDgyblCC13_wPik-LhIT6h0zr8",
+            authDomain: "omrsheet-edca2.firebaseapp.com",
+            projectId: "omrsheet-edca2",
+            storageBucket: "omrsheet-edca2.firebasestorage.app",
+            messagingSenderId: "692085753827",
+            appId: "1:692085753827:web:b4163817b09b01698cc2d6",
+            measurementId: "G-21CZBEXSZK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.firebaseDB = db;
+        window.firebaseSetDoc = setDoc;
+        window.firebaseDoc = doc;
+        window.firebaseCollection = collection;
+        window.firebaseGetDocs = getDocs;
+        window.firebaseQuery = query;
+        window.firebaseOrderBy = orderBy;
+    </script>
 
     <!-- =========================================================
          JAVASCRIPT ENGINE
@@ -2595,6 +2854,133 @@
 
             snapshotState();
         });
+
+        /* ============================================================
+           FIRESTORE BACKUP & LOAD LOGIC
+        ============================================================ */
+        async function backupToFirestore() {
+            if (!window.firebaseDB) {
+                showToast('Firebase not initialized yet!', 'error');
+                return;
+            }
+            try {
+                showToast('Uploading to Cloud...', 'info', 2000);
+                await saveAllData(true);
+
+                const rawData = localStorage.getItem(STORAGE_KEY);
+                if (!rawData) {
+                    showToast('No data to backup!', 'warn');
+                    return;
+                }
+                const pagesData = JSON.parse(rawData);
+
+                const timestamp = Date.now();
+                const reportId = 'report_' + timestamp;
+
+                const reportRef = window.firebaseDoc(window.firebaseDB, 'reports', reportId);
+                await window.firebaseSetDoc(reportRef, {
+                    updatedAt: timestamp,
+                    dateString: new Date().toLocaleString('en-IN'),
+                    totalPages: pagesData.length
+                });
+
+                for (let i = 0; i < pagesData.length; i++) {
+                    const pageRef = window.firebaseDoc(window.firebaseDB, `reports/${reportId}/pages`, `page_${i}`);
+                    await window.firebaseSetDoc(pageRef, {
+                        pageIndex: i,
+                        data: pagesData[i]
+                    });
+                }
+
+                showToast('☁️ Saved to Cloud Successfully!', 'success');
+            } catch (error) {
+                console.error("Firestore Backup Error:", error);
+                showToast('Cloud Save Failed! See console.', 'error');
+            }
+        }
+
+        async function openCloudLoadModal() {
+            if (!window.firebaseDB) {
+                showToast('Firebase not initialized yet!', 'error');
+                return;
+            }
+            const modal = document.getElementById('cloud-modal');
+            const listEl = document.getElementById('cloud-modal-list');
+            modal.classList.add('active');
+            listEl.innerHTML = '<div class="cloud-modal-loading">Loading backups...</div>';
+
+            try {
+                const reportsRef = window.firebaseCollection(window.firebaseDB, 'reports');
+                const q = window.firebaseQuery(reportsRef, window.firebaseOrderBy("updatedAt", "desc"));
+                const snapshot = await window.firebaseGetDocs(q);
+
+                if (snapshot.empty) {
+                    listEl.innerHTML = '<div class="cloud-modal-loading">No Cloud Backups found!</div>';
+                    return;
+                }
+
+                listEl.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const item = document.createElement('div');
+                    item.className = 'cloud-backup-item';
+                    item.innerHTML = `
+                        <div>
+                            <div class="cloud-backup-date">${data.dateString || new Date(data.updatedAt).toLocaleString()}</div>
+                            <div class="cloud-backup-meta">${data.totalPages} Pages Saved</div>
+                        </div>
+                        <button class="cloud-backup-action">Load</button>
+                    `;
+                    item.addEventListener('click', () => {
+                        modal.classList.remove('active');
+                        loadFromFirestore(doc.id);
+                    });
+                    listEl.appendChild(item);
+                });
+            } catch (error) {
+                console.error("Fetch Backups Error:", error);
+                listEl.innerHTML = '<div class="cloud-modal-loading" style="color:#ef4444">Failed to load list.</div>';
+            }
+        }
+
+        document.getElementById('cloud-modal-close').addEventListener('click', () => {
+            document.getElementById('cloud-modal').classList.remove('active');
+        });
+
+        async function loadFromFirestore(reportId) {
+            try {
+                showToast('Downloading from Cloud...', 'info', 2000);
+                const pagesRef = window.firebaseCollection(window.firebaseDB, `reports/${reportId}/pages`);
+                const snapshot = await window.firebaseGetDocs(pagesRef);
+
+                if (snapshot.empty) {
+                    showToast('Backup is empty!', 'warn');
+                    return;
+                }
+
+                let pagesData = [];
+                snapshot.forEach(doc => {
+                    pagesData.push(doc.data());
+                });
+
+                pagesData.sort((a, b) => a.pageIndex - b.pageIndex);
+
+                const finalData = pagesData.map(p => p.data);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
+
+                showToast('☁️ Loaded from Cloud! Rebuilding...', 'success');
+                setTimeout(() => {
+                    window.removeEventListener('beforeunload', _beforeUnloadSave);
+                    location.reload();
+                }, 1000);
+            } catch (error) {
+                console.error("Firestore Load Error:", error);
+                showToast('Cloud Load Failed! See console.', 'error');
+            }
+        }
+
+        document.getElementById('btn-cloud-save').addEventListener('click', backupToFirestore);
+        document.getElementById('btn-cloud-load').addEventListener('click', openCloudLoadModal);
     </script>
 </body>
 
