@@ -94,7 +94,7 @@
         ============================================================ */
         .sidebar {
             background: linear-gradient(135deg, #090d16 0%, #141e30 100%);
-            width: 200px; /* Marked: reduced width for sidebars from 280px to 220px */
+            width: 220px; /* Marked: reduced width for sidebars from 280px to 220px */
             padding: 16px;
             display: flex;
             flex-direction: column;
@@ -102,19 +102,31 @@
             z-index: 5000;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
             overflow-y: auto;
-            flex-shrink: 0;
+            position: fixed;
+            top: 0;
+            height: 100vh;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .sidebar-left {
+            left: 0;
             border-right: 2px solid rgba(255, 255, 255, 0.05);
+            transform: translateX(-100%);
         }
 
         .sidebar-right {
+            right: 0;
             border-left: 2px solid rgba(255, 255, 255, 0.05);
+            transform: translateX(100%);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
         }
 
         .workspace-container {
-            flex: 1;
+            width: 100%;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -122,6 +134,40 @@
             padding: 20px 0;
             position: relative;
         }
+
+        /* Hamburger Menus */
+        .menu-toggle {
+            position: fixed;
+            top: 15px;
+            z-index: 4999;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            transition: background 0.2s;
+        }
+        .menu-toggle:hover { background: rgba(255,255,255,0.1); }
+        .menu-toggle-left { left: 15px; }
+        .menu-toggle-right { right: 15px; }
+        
+        /* Hover triggers */
+        .hover-trigger {
+            position: fixed;
+            top: 0;
+            height: 100vh;
+            width: 20px;
+            z-index: 4998;
+        }
+        .hover-trigger-left { left: 0; }
+        .hover-trigger-right { right: 0; }
 
         .control-group {
             background: rgba(255, 255, 255, 0.03);
@@ -880,6 +926,8 @@
            PDF EXPORT MODE & PRINT STYLING
         ============================================================ */
         body.pdf-export-mode .sidebar,
+        body.pdf-export-mode .menu-toggle,
+        body.pdf-export-mode .hover-trigger,
         body.pdf-export-mode .resizer,
         body.pdf-export-mode .move-handle,
         body.pdf-export-mode .delete-btn,
@@ -925,6 +973,8 @@
             }
 
             .sidebar,
+            .menu-toggle,
+            .hover-trigger,
             .resizer,
             .move-handle,
             .delete-btn,
@@ -1167,6 +1217,13 @@
 </head>
 
 <body>
+    <!-- Hamburger Menus -->
+    <button class="menu-toggle menu-toggle-left" id="btn-menu-left">☰</button>
+    <button class="menu-toggle menu-toggle-right" id="btn-menu-right">⚙️</button>
+
+    <!-- Hover Triggers -->
+    <div class="hover-trigger hover-trigger-left" id="trigger-left"></div>
+    <div class="hover-trigger hover-trigger-right" id="trigger-right"></div>
 
     <!-- =========================================================
          LEFT SIDEBAR
@@ -1520,6 +1577,58 @@
             }
             return id;
         }
+
+        /* ============================================================
+           SIDEBAR AUTO-HIDE LOGIC
+        ============================================================ */
+        const sidebarLeft = document.querySelector('.sidebar-left');
+        const sidebarRight = document.querySelector('.sidebar-right');
+        const triggerLeft = document.getElementById('trigger-left');
+        const triggerRight = document.getElementById('trigger-right');
+        const btnMenuLeft = document.getElementById('btn-menu-left');
+        const btnMenuRight = document.getElementById('btn-menu-right');
+
+        let hideTimerLeft = null;
+        function hideLeft() {
+            hideTimerLeft = setTimeout(() => { sidebarLeft.classList.remove('active'); }, 2000);
+        }
+        function showLeft() {
+            clearTimeout(hideTimerLeft);
+            sidebarLeft.classList.add('active');
+        }
+        triggerLeft.addEventListener('mouseenter', showLeft);
+        btnMenuLeft.addEventListener('mouseenter', showLeft);
+        sidebarLeft.addEventListener('mouseenter', showLeft);
+        
+        triggerLeft.addEventListener('mouseleave', hideLeft);
+        btnMenuLeft.addEventListener('mouseleave', hideLeft);
+        sidebarLeft.addEventListener('mouseleave', hideLeft);
+        
+        btnMenuLeft.addEventListener('click', () => {
+            if (sidebarLeft.classList.contains('active')) sidebarLeft.classList.remove('active');
+            else showLeft();
+        });
+
+        let hideTimerRight = null;
+        function hideRight() {
+            hideTimerRight = setTimeout(() => { sidebarRight.classList.remove('active'); }, 2000);
+        }
+        function showRight() {
+            clearTimeout(hideTimerRight);
+            sidebarRight.classList.add('active');
+        }
+        triggerRight.addEventListener('mouseenter', showRight);
+        btnMenuRight.addEventListener('mouseenter', showRight);
+        sidebarRight.addEventListener('mouseenter', showRight);
+        
+        triggerRight.addEventListener('mouseleave', hideRight);
+        btnMenuRight.addEventListener('mouseleave', hideRight);
+        sidebarRight.addEventListener('mouseleave', hideRight);
+        
+        btnMenuRight.addEventListener('click', () => {
+            if (sidebarRight.classList.contains('active')) sidebarRight.classList.remove('active');
+            else showRight();
+        });
 
         /* ============================================================
            EVENT BINDINGS
