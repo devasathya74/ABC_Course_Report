@@ -63,11 +63,11 @@
                 radial-gradient(ellipse at 85% 70%, rgba(15, 23, 42, 0.9) 0%, transparent 60%);
             font-family: 'Mukta', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            flex-direction: row;
+            justify-content: space-between;
+            height: 100vh;
             color: #f1f5f9;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         /* Workspace Scrollbar */
@@ -90,28 +90,37 @@
         }
 
         /* ============================================================
-           MASTER CONTROLS BAR
+           SIDEBAR CONTROLS
         ============================================================ */
-        .master-controls {
+        .sidebar {
             background: linear-gradient(135deg, #090d16 0%, #141e30 100%);
-            width: 100%;
-            padding: 16px 24px;
+            width: 220px; /* Marked: reduced width for sidebars from 280px to 220px */
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            position: sticky;
-            top: 0;
+            gap: 16px;
             z-index: 5000;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
-            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-left {
+            border-right: 2px solid rgba(255, 255, 255, 0.05);
         }
 
-        .controls-row {
+        .sidebar-right {
+            border-left: 2px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .workspace-container {
+            flex: 1;
             display: flex;
-            justify-content: center;
-            align-items: stretch;
-            gap: 16px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            padding: 20px 0;
+            position: relative;
         }
 
         .control-group {
@@ -870,7 +879,7 @@
         /* ============================================================
            PDF EXPORT MODE & PRINT STYLING
         ============================================================ */
-        body.pdf-export-mode .master-controls,
+        body.pdf-export-mode .sidebar,
         body.pdf-export-mode .resizer,
         body.pdf-export-mode .move-handle,
         body.pdf-export-mode .delete-btn,
@@ -915,7 +924,7 @@
                 height: auto;
             }
 
-            .master-controls,
+            .sidebar,
             .resizer,
             .move-handle,
             .delete-btn,
@@ -1160,114 +1169,58 @@
 <body>
 
     <!-- =========================================================
-         MASTER CONTROLS
+         LEFT SIDEBAR
     ========================================================= -->
-    <div class="master-controls" role="toolbar" aria-label="मुख्य नियंत्रण">
-        <div class="controls-row">
-
-            <!-- History & Cloud Group -->
-            <div class="control-group">
-                <div class="control-group-label">History & Cloud</div>
-                <div class="control-group-buttons">
-                    <button class="master-btn btn-clear" id="btn-undo" title="Undo (Ctrl+Z)" disabled>↩️</button>
-                    <button class="master-btn btn-clear" id="btn-redo" title="Redo (Ctrl+Y)" disabled>↪️</button>
-                    <button class="master-btn btn-cloud-save" id="btn-cloud-save"
-                        style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;"
-                        title="Save to Cloud">☁️ Save</button>
-                    <button class="master-btn btn-cloud-load" id="btn-cloud-load"
-                        style="background: linear-gradient(135deg, #10b981, #059669); color: white;"
-                        title="Load from Cloud">☁️ Load</button>
-                    <button class="master-btn btn-clear" id="btn-clear" title="Clear Data">🔄 Clear</button>
-                </div>
+    <div class="sidebar sidebar-left" role="toolbar" aria-label="मुख्य नियंत्रण - बायाँ">
+        <!-- History & Cloud Group -->
+        <div class="control-group">
+            <div class="control-group-label">History & Cloud</div>
+            <div class="control-group-buttons">
+                <button class="master-btn btn-clear" id="btn-undo" title="Undo (Ctrl+Z)" disabled>↩️</button>
+                <button class="master-btn btn-clear" id="btn-redo" title="Redo (Ctrl+Y)" disabled>↪️</button>
+                <button class="master-btn btn-cloud-save" id="btn-cloud-save"
+                    style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;"
+                    title="Save to Cloud">☁️ Save</button>
+                <button class="master-btn btn-cloud-load" id="btn-cloud-load"
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white;"
+                    title="Load from Cloud">☁️ Load</button>
+                <button class="master-btn btn-clear" id="btn-clear" title="Clear Data">🔄 Clear</button>
             </div>
-
-            <!-- Page Management Group -->
-            <div class="control-group">
-                <div class="control-group-label">Pages</div>
-                <div class="control-group-buttons">
-                    <button class="master-btn btn-add-page" id="btn-add-page">📄 New Page</button>
-                    <button class="master-btn btn-paste-page" id="btn-paste-page">📋 Paste Page</button>
-                    <button class="master-btn btn-multi-upload" id="btn-multi-upload">🖼️ Multi Upload</button>
-                    <button class="master-btn btn-delete-page" id="btn-delete-page">🗑️ Delete</button>
-                </div>
-            </div>
-
-            <!-- Page Size Group -->
-            <div class="control-group">
-                <div class="control-group-label">Size (mm)</div>
-                <div class="control-group-buttons" style="display:flex; align-items:center; gap:4px;">
-                    <span style="font-size:12px; color:#94a3b8;">W:</span>
-                    <button class="master-btn" id="btn-width-down" style="padding:4px 8px; font-size:12px;" title="Decrease Width">-</button>
-                    <span id="label-width" style="font-size:12px; color:white; min-width: 25px; text-align: center;">356</span>
-                    <button class="master-btn" id="btn-width-up" style="padding:4px 8px; font-size:12px;" title="Increase Width">+</button>
-                    
-                    <span style="font-size:12px; color:#94a3b8; margin-left:8px;">H:</span>
-                    <button class="master-btn" id="btn-height-down" style="padding:4px 8px; font-size:12px;" title="Decrease Height">-</button>
-                    <span id="label-height" style="font-size:12px; color:white; min-width: 25px; text-align: center;">280</span>
-                    <button class="master-btn" id="btn-height-up" style="padding:4px 8px; font-size:12px;" title="Increase Height">+</button>
-                </div>
-            </div>
-
-            <!-- Table Columns Group -->
-            <div class="control-group">
-                <div class="control-group-label" title="Column Widths (%)">Table Cols</div>
-                <div class="control-group-buttons" style="display:flex; align-items:center; gap:3px;">
-                    <input type="text" id="col1-width" placeholder="C1" title="Col 1 (क्र०सं०)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
-                    <input type="text" id="col2-width" placeholder="C2" title="Col 2 (वाहिनी)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
-                    <input type="text" id="col3-width" placeholder="C3" title="Col 3 (दल)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
-                    <input type="text" id="col4-width" placeholder="C4" title="Col 4 (दलनायक)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
-                    <input type="text" id="col5-width" placeholder="C5" title="Col 5 (व्यवस्थापन)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
-                    <input type="text" id="col6-width" placeholder="C6" title="Col 6 (कोर्स)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
-                    <input type="text" id="col7-width" placeholder="C7" title="Col 7 (विवरण)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
-                </div>
-            </div>
-
-            <!-- Export Group -->
-            <div class="control-group">
-                <div class="control-group-label">Export</div>
-                <div class="control-group-buttons">
-                    <button class="master-btn btn-pdf" id="btn-pdf">📄 PDF</button>
-                    <button class="master-btn btn-print" id="btn-print">🖨️ Print</button>
-                </div>
-            </div>
-
-            <!-- Formatting Group -->
-            <div class="control-group">
-                <div class="control-group-label">Format</div>
-                <div class="control-group-buttons">
-                    <button class="master-btn btn-bold" id="btn-bold" title="Select text and click to bold (Ctrl+B)">𝐁
-                        Bold</button>
-                    <button class="master-btn btn-font-size" id="btn-font-up"
-                        title="Increase Font Size of Selection">A+</button>
-                    <button class="master-btn btn-font-size" id="btn-font-down"
-                        title="Decrease Font Size of Selection">A-</button>
-                </div>
-            </div>
-
-            <!-- View Settings Group -->
-            <div class="control-group">
-                <div class="control-group-label">View</div>
-                <div class="control-group-buttons">
-                    <div class="theme-select-container">
-                        <span class="theme-select-label">🎨</span>
-                        <select id="theme-selector" class="theme-select">
-                            <option value="default" selected>सतरंगी (Rainbow)</option>
-                            <option value="theme-formal">प्रशासनिक (Navy/Gold)</option>
-                        </select>
-                    </div>
-                    <div class="scale-control-container">
-                        <span>🔍</span>
-                        <button class="scale-btn" id="btn-scale-down">-</button>
-                        <span id="scale-indicator">100 </span>
-                        <button class="scale-btn" id="btn-scale-up">+</button>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
-        <div
-            style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1400px; margin: 8px auto 0 auto; padding: 0 20px;">
+        <!-- Page Management Group -->
+        <div class="control-group">
+            <div class="control-group-label">Pages</div>
+            <div class="control-group-buttons">
+                <button class="master-btn btn-add-page" id="btn-add-page">📄 New Page</button>
+                <button class="master-btn btn-paste-page" id="btn-paste-page">📋 Paste Page</button>
+                <button class="master-btn btn-multi-upload" id="btn-multi-upload">🖼️ Multi Upload</button>
+                <button class="master-btn btn-delete-page" id="btn-delete-page">🗑️ Delete</button>
+            </div>
+        </div>
+
+        <!-- Page Size Group -->
+        <div class="control-group">
+            <div class="control-group-label">Size (mm)</div>
+            <div class="control-group-buttons" style="display:flex; align-items:center; gap:4px;">
+                <span style="font-size:12px; color:#94a3b8;">W:</span>
+                <button class="master-btn" id="btn-width-down" style="padding:4px 8px; font-size:12px;" title="Decrease Width">-</button>
+                <span id="label-width" style="font-size:12px; color:white; min-width: 25px; text-align: center;">356</span>
+                <button class="master-btn" id="btn-width-up" style="padding:4px 8px; font-size:12px;" title="Increase Width">+</button>
+                
+                <span style="font-size:12px; color:#94a3b8; margin-left:8px;">H:</span>
+                <button class="master-btn" id="btn-height-down" style="padding:4px 8px; font-size:12px;" title="Decrease Height">-</button>
+                <span id="label-height" style="font-size:12px; color:white; min-width: 25px; text-align: center;">280</span>
+                <button class="master-btn" id="btn-height-up" style="padding:4px 8px; font-size:12px;" title="Increase Height">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         WORKSPACE CONTAINER
+    ========================================================= -->
+    <div class="workspace-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1400px; margin: 0 auto 16px auto; padding: 0 20px;">
             <div class="info-text" style="margin: 0;">
                 <b>Select:</b> Page Click &nbsp;|&nbsp;
                 <b>Move Box:</b> Black Bar / Arrows &nbsp;|&nbsp;
@@ -1277,18 +1230,16 @@
                 <b>Undo:</b> Ctrl+Z
             </div>
             <span class="page-counter" id="page-counter" aria-live="polite"
-                style="margin: 0; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px;">📃 1
-                पेज</span>
+                style="margin: 0; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px;">📃 1 पेज</span>
         </div>
 
         <!-- Hidden file input -->
         <input type="file" id="multi-file-input" multiple accept="image/*" hidden>
-    </div>
 
-    <!-- =========================================================
-         ALL PAGES WORKSPACE WRAPPER
-    ========================================================= -->
-    <div id="all-pages-wrapper">
+        <!-- =========================================================
+             ALL PAGES WORKSPACE WRAPPER
+        ========================================================= -->
+        <div id="all-pages-wrapper">
 
         <!-- PAGE 1: PAC REPORT (MATCHING IMAGE_6713BB.JPG & IMAGE_671EE2.PNG) -->
         <div class="a4-page" id="report-page" tabindex="0">
@@ -1415,6 +1366,65 @@
             <div class="page-label">📄 पेज 1 — रिपोर्ट</div>
         </div>
 
+    </div>
+    </div> <!-- Close workspace-container -->
+
+    <!-- =========================================================
+         RIGHT SIDEBAR
+    ========================================================= -->
+    <div class="sidebar sidebar-right" role="toolbar" aria-label="मुख्य नियंत्रण - दायाँ">
+        <!-- Table Columns Group -->
+        <div class="control-group">
+            <div class="control-group-label" title="Column Widths (%)">Table Cols</div>
+            <div class="control-group-buttons" style="display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap;">
+                <input type="text" id="col1-width" placeholder="C1" title="Col 1 (क्र०सं०)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col2-width" placeholder="C2" title="Col 2 (वाहिनी)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col3-width" placeholder="C3" title="Col 3 (दल)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col4-width" placeholder="C4" title="Col 4 (दलनायक)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col5-width" placeholder="C5" title="Col 5 (व्यवस्थापन)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col6-width" placeholder="C6" title="Col 6 (कोर्स)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col7-width" placeholder="C7" title="Col 7 (विवरण)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+            </div>
+        </div>
+
+        <!-- Export Group -->
+        <div class="control-group">
+            <div class="control-group-label">Export</div>
+            <div class="control-group-buttons">
+                <button class="master-btn btn-pdf" id="btn-pdf">📄 PDF</button>
+                <button class="master-btn btn-print" id="btn-print">🖨️ Print</button>
+            </div>
+        </div>
+
+        <!-- Formatting Group -->
+        <div class="control-group">
+            <div class="control-group-label">Format</div>
+            <div class="control-group-buttons">
+                <button class="master-btn btn-bold" id="btn-bold" title="Select text and click to bold (Ctrl+B)">𝐁 Bold</button>
+                <button class="master-btn btn-font-size" id="btn-font-up" title="Increase Font Size of Selection">A+</button>
+                <button class="master-btn btn-font-size" id="btn-font-down" title="Decrease Font Size of Selection">A-</button>
+            </div>
+        </div>
+
+        <!-- View Settings Group -->
+        <div class="control-group">
+            <div class="control-group-label">View</div>
+            <div class="control-group-buttons">
+                <div class="theme-select-container">
+                    <span class="theme-select-label">🎨</span>
+                    <select id="theme-selector" class="theme-select">
+                        <option value="default" selected>सतरंगी (Rainbow)</option>
+                        <option value="theme-formal">प्रशासनिक (Navy/Gold)</option>
+                    </select>
+                </div>
+                <div class="scale-control-container">
+                    <span>🔍</span>
+                    <button class="scale-btn" id="btn-scale-down">-</button>
+                    <span id="scale-indicator">100 </span>
+                    <button class="scale-btn" id="btn-scale-up">+</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Toast container -->
