@@ -63,11 +63,11 @@
                 radial-gradient(ellipse at 85% 70%, rgba(15, 23, 42, 0.9) 0%, transparent 60%);
             font-family: 'Mukta', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            flex-direction: row;
+            justify-content: space-between;
+            height: 100vh;
             color: #f1f5f9;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         /* Workspace Scrollbar */
@@ -90,28 +90,125 @@
         }
 
         /* ============================================================
-           MASTER CONTROLS BAR
+           SIDEBAR CONTROLS
         ============================================================ */
-        .master-controls {
+        .sidebar {
             background: linear-gradient(135deg, #090d16 0%, #141e30 100%);
-            width: 100%;
-            padding: 12px 24px;
+            width: 220px; /* Marked: reduced width for sidebars from 280px to 220px */
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            position: sticky;
-            top: 0;
+            gap: 16px;
             z-index: 5000;
-            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.8);
-            border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+            overflow-y: auto;
+            position: fixed;
+            top: 0;
+            height: 100vh;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar-left {
+            left: 0;
+            border-right: 2px solid rgba(255, 255, 255, 0.05);
+            transform: translateX(-100%);
         }
 
-        .controls-row {
+        .sidebar-right {
+            right: 0;
+            border-left: 2px solid rgba(255, 255, 255, 0.05);
+            transform: translateX(100%);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .workspace-container {
+            width: 100%;
+            height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            gap: 10px;
+            overflow-y: auto;
+            padding: 20px 0;
+            position: relative;
+        }
+
+        /* Hamburger Menus */
+        .menu-toggle {
+            position: fixed;
+            top: 15px;
+            z-index: 4999;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            transition: background 0.2s;
+        }
+        .menu-toggle:hover { background: rgba(255,255,255,0.1); }
+        .menu-toggle-left { left: 15px; }
+        .menu-toggle-right { right: 15px; }
+        
+        /* Hover triggers */
+        .hover-trigger {
+            position: fixed;
+            top: 0;
+            height: 100vh;
+            width: 20px;
+            z-index: 4998;
+        }
+        .hover-trigger-left { left: 0; }
+        .hover-trigger-right { right: 0; }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+
+        .control-group:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .control-group-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            width: 100%;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 4px;
+            margin-bottom: 2px;
+        }
+
+        .control-group-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
             flex-wrap: wrap;
+            justify-content: center;
+            height: 100%;
         }
 
         .master-btn {
@@ -354,8 +451,8 @@
            A4 PAGE BASE (LANDSCAPE)
         ============================================================ */
         .a4-page {
-            width: 356mm;
-            height: 280mm;
+            width: var(--page-width, 356mm);
+            height: var(--page-height, 280mm);
             background: white;
             position: relative;
             box-sizing: border-box;
@@ -558,21 +655,24 @@
             touch-action: none;
             -webkit-user-select: none;
             user-select: none;
+            border: 2px dashed #94a3b8;
+            border-radius: 6px;
+            transition: outline 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
         }
 
         .resizable-box::after {
             content: '';
             position: absolute;
-            inset: -3px;
+            inset: -4px;
             background: linear-gradient(45deg, #f59e0b, #ef4444, #3b82f6, #10b981);
-            border-radius: 2px;
+            border-radius: 4px;
             z-index: -1;
             opacity: 0.55;
         }
 
         .resizable-box:focus {
             z-index: 20;
-            box-shadow: 0 0 0 3px #3b82f6, 0 8px 30px rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 0 4px #3b82f6, 0 8px 30px rgba(59, 130, 246, 0.6);
         }
 
         .resizable-box:focus::after {
@@ -587,6 +687,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            border-radius: 4px;
+            transition: background-color 0.2s;
         }
 
         .box-content img {
@@ -608,23 +710,25 @@
         /* Move Handle */
         .move-handle {
             position: absolute;
-            top: -30px;
+            top: -32px;
             left: 0;
             width: 100%;
-            height: 30px;
-            background: linear-gradient(90deg, #1e293b, #334155);
+            height: 32px;
+            background: linear-gradient(90deg, #0f172a, #1e293b, #334155);
             cursor: move;
             z-index: 100;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 11px;
-            color: rgba(255, 255, 255, 0.7);
-            letter-spacing: 4px;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 3px;
             user-select: none;
-            font-weight: bold;
-            border-top-left-radius: 4px;
-            border-top-right-radius: 4px;
+            font-weight: 800;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            border-top: 3px solid #3b82f6;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
         }
 
         /* Delete Button */
@@ -680,109 +784,175 @@
             transform: rotate(90deg) scale(1.2);
         }
 
-        /* Selected Box State */
-        .resizable-box {
-            outline: 2px solid transparent;
-            transition: outline 0.2s;
+        /* Fit Button */
+        .fit-btn {
+            position: absolute;
+            top: -16px;
+            left: 24px;
+            width: 32px;
+            height: 32px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 110;
+            border: 2px solid white;
+            transition: all 0.2s;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+            user-select: none;
         }
 
+        .fit-btn:hover {
+            background: #059669;
+            transform: scale(1.2);
+        }
+
+        /* Selected Box State & Drag-Over Highlight */
         .resizable-box.selected-box {
-            outline: 2px dashed #3b82f6;
+            border-color: transparent;
+            outline: 4px dashed #2563eb;
+            outline-offset: 3px;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3), 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .resizable-box.drag-over {
+            outline: 4px dashed #10b981 !important;
+            outline-offset: 3px !important;
+            background-color: #ecfdf5 !important;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.6) !important;
+            transform: scale(1.02);
         }
 
         .resizable-box:not(.selected-box) .resizer,
         .resizable-box:not(.selected-box) .move-handle,
         .resizable-box:not(.selected-box) .delete-btn,
-        .resizable-box:not(.selected-box) .rotate-btn {
+        .resizable-box:not(.selected-box) .rotate-btn,
+        .resizable-box:not(.selected-box) .fit-btn {
             display: none !important;
         }
 
-        /* Resizer Handles */
+        /* Resizer Handles - Extra Large & Prominent */
         .resizer {
             position: absolute;
-            background: #3b82f6;
+            background: #2563eb;
             z-index: 105;
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            border: 2px solid white;
-            transition: all 0.15s;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            border: 3px solid #ffffff;
+            transition: background-color 0.15s, transform 0.15s;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
         }
 
-        .resizer:hover {
-            background: #2563eb;
-            transform: scale(1.3);
+        .resizer::after {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            right: -12px;
+            bottom: -12px;
         }
 
         .resizer.tl {
-            top: -10px;
-            left: -10px;
+            top: -13px;
+            left: -13px;
             cursor: nw-resize;
         }
 
         .resizer.tr {
-            top: -10px;
-            right: -10px;
+            top: -13px;
+            right: -13px;
             cursor: ne-resize;
         }
 
         .resizer.bl {
-            bottom: -10px;
-            left: -10px;
+            bottom: -13px;
+            left: -13px;
             cursor: sw-resize;
         }
 
         .resizer.br {
-            bottom: -10px;
-            right: -10px;
+            bottom: -13px;
+            right: -13px;
             cursor: se-resize;
         }
 
         .resizer.t {
-            top: -10px;
+            top: -13px;
             left: 50%;
             transform: translateX(-50%);
             cursor: n-resize;
         }
 
         .resizer.b {
-            bottom: -10px;
+            bottom: -13px;
             left: 50%;
             transform: translateX(-50%);
             cursor: s-resize;
         }
 
         .resizer.l {
-            left: -10px;
+            left: -13px;
             top: 50%;
             transform: translateY(-50%);
             cursor: w-resize;
         }
 
         .resizer.r {
-            right: -10px;
+            right: -13px;
             top: 50%;
             transform: translateY(-50%);
             cursor: e-resize;
+        }
+
+        .resizer.tl:hover, .resizer.tr:hover, .resizer.bl:hover, .resizer.br:hover {
+            background: #1d4ed8;
+            transform: scale(1.3);
+        }
+
+        .resizer.t:hover, .resizer.b:hover {
+            background: #1d4ed8;
+            transform: translateX(-50%) scale(1.3);
+        }
+
+        .resizer.l:hover, .resizer.r:hover {
+            background: #1d4ed8;
+            transform: translateY(-50%) scale(1.3);
         }
 
         /* Upload Label inside blank box */
         .upload-label {
             cursor: pointer;
             text-align: center;
-            font-size: 13px;
-            font-weight: 700;
-            color: #64748b;
+            font-size: 14px;
+            font-weight: 800;
+            color: #475569;
             z-index: 50;
             user-select: none;
-            padding: 16px;
+            padding: 16px 10px;
             line-height: 1.8;
-            transition: color 0.2s;
+            transition: all 0.2s;
+            width: calc(100% - 16px);
+            height: calc(100% - 16px);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            background: rgba(248, 250, 252, 0.85);
+            margin: 8px;
         }
 
         .upload-label:hover {
-            color: #1e293b;
+            color: #1d4ed8;
+            border-color: #2563eb;
+            background: #eff6ff;
         }
 
         /* Canvas-level Add/Paste controls */
@@ -828,11 +998,17 @@
         /* ============================================================
            PDF EXPORT MODE & PRINT STYLING
         ============================================================ */
-        body.pdf-export-mode .master-controls,
+        body.pdf-export-mode .sidebar,
+        body.pdf-export-mode .sidebar-overlay,
+        body.pdf-export-mode .mobile-bottom-bar,
+        body.pdf-export-mode .mobile-zoom-widget,
+        body.pdf-export-mode .menu-toggle,
+        body.pdf-export-mode .hover-trigger,
         body.pdf-export-mode .resizer,
         body.pdf-export-mode .move-handle,
         body.pdf-export-mode .delete-btn,
         body.pdf-export-mode .rotate-btn,
+        body.pdf-export-mode .fit-btn,
         body.pdf-export-mode .manual-move-btn,
         body.pdf-export-mode .upload-label,
         body.pdf-export-mode .add-box-btn-inner,
@@ -873,11 +1049,17 @@
                 height: auto;
             }
 
-            .master-controls,
+            .sidebar,
+            .sidebar-overlay,
+            .mobile-bottom-bar,
+            .mobile-zoom-widget,
+            .menu-toggle,
+            .hover-trigger,
             .resizer,
             .move-handle,
             .delete-btn,
             .rotate-btn,
+            .fit-btn,
             .manual-move-btn,
             .upload-label,
             .add-box-btn-inner,
@@ -977,72 +1159,378 @@
         .resizable-box:not(.selected-box) .manual-move-btn {
             display: none !important;
         }
+
+        /* ============================================================
+           CLOUD LOAD MODAL
+        ============================================================ */
+        .cloud-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .cloud-modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .cloud-modal-content {
+            background: #1e293b;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .cloud-modal-overlay.active .cloud-modal-content {
+            transform: scale(1);
+        }
+
+        .cloud-modal-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #090d16, #141e30);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cloud-modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #38bdf8;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cloud-modal-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            transition: color 0.2s;
+        }
+
+        .cloud-modal-close:hover {
+            color: #ef4444;
+        }
+
+        .cloud-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .cloud-backup-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cloud-backup-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+        }
+
+        .cloud-backup-date {
+            font-size: 15px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .cloud-backup-meta {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .cloud-backup-action {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .cloud-modal-loading {
+            text-align: center;
+            padding: 30px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        /* Sidebar Backdrop Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 4995;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* ============================================================
+           MOBILE SCREEN RESPONSIVENESS & TOUCH UX STYLES
+        ============================================================ */
+        .mobile-bottom-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 62px;
+            background: rgba(15, 23, 42, 0.96);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            z-index: 4500;
+            padding: 4px 6px;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .mobile-action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+            gap: 2px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-action-btn .btn-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .mobile-action-btn:active, .mobile-action-btn.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            transform: scale(0.95);
+        }
+
+        .mobile-zoom-widget {
+            display: none;
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 4800;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            padding: 4px 10px;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+        }
+
+        .mobile-zoom-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background 0.2s;
+            touch-action: manipulation;
+        }
+
+        .mobile-zoom-btn:active {
+            background: #38bdf8;
+            color: #0f172a;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 280px;
+                max-width: 85vw;
+            }
+
+            .workspace-container {
+                padding: 55px 8px 75px 8px;
+            }
+
+            .menu-toggle {
+                width: 44px;
+                height: 44px;
+                font-size: 22px;
+                top: 10px;
+            }
+
+            .menu-toggle-left { left: 10px; }
+            .menu-toggle-right { right: 10px; }
+
+            .mobile-bottom-bar {
+                display: flex;
+            }
+
+            .mobile-zoom-widget {
+                display: flex;
+            }
+
+            .hover-trigger {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
 <body>
+    <!-- Sidebar Backdrop Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Floating Mobile Zoom Widget -->
+    <div class="mobile-zoom-widget" id="mobile-zoom-widget">
+        <button class="mobile-zoom-btn" id="m-zoom-fit">📱 Fit</button>
+        <button class="mobile-zoom-btn" id="m-zoom-100">100%</button>
+        <button class="mobile-zoom-btn" id="m-zoom-out">-</button>
+        <span id="m-zoom-label" style="font-size: 11px; font-weight: 800; color: #38bdf8;">70%</span>
+        <button class="mobile-zoom-btn" id="m-zoom-in">+</button>
+    </div>
+
+    <!-- Hamburger Menus -->
+    <button class="menu-toggle menu-toggle-left" id="btn-menu-left" title="मुख्य मेनू">☰</button>
+    <button class="menu-toggle menu-toggle-right" id="btn-menu-right" title="सेटिंग्स व व्यू">⚙️</button>
+
+    <!-- Hover Triggers -->
+    <div class="hover-trigger hover-trigger-left" id="trigger-left"></div>
+    <div class="hover-trigger hover-trigger-right" id="trigger-right"></div>
 
     <!-- =========================================================
-         MASTER CONTROLS
+         LEFT SIDEBAR
     ========================================================= -->
-    <div class="master-controls" role="toolbar" aria-label="मुख्य नियंत्रण">
-        <div class="controls-row">
-            <button class="master-btn btn-clear" id="btn-undo" title="Undo (Ctrl+Z)" disabled>↩️ Undo</button>
-            <button class="master-btn btn-clear" id="btn-redo" title="Redo (Ctrl+Y)" disabled>↪️ Redo</button>
-            <button class="master-btn btn-add-page" id="btn-add-page">📄 नया फोटो पेज</button>
-            <button class="master-btn btn-paste-page" id="btn-paste-page">📋 Clipboard पेज</button>
-            <button class="master-btn btn-multi-upload" id="btn-multi-upload">🖼️ Multi Upload</button>
-            <button class="master-btn btn-delete-page" id="btn-delete-page">🗑️ पेज हटाएं</button>
-            <button class="master-btn btn-pdf" id="btn-pdf">📄 PDF Download</button>
-            <button class="master-btn btn-print" id="btn-print">🖨️ Print Report</button>
-            <button class="master-btn btn-clear" id="btn-clear">🔄 डेटा मिटाएं</button>
-
-            <!-- Text Styling / Font Size buttons -->
-            <button class="master-btn btn-bold" id="btn-bold" title="Select text and click to bold (Ctrl+B)">𝐁
-                Bold</button>
-            <button class="master-btn btn-font-size" id="btn-font-up"
-                title="Increase Font Size of Selection">A+</button>
-            <button class="master-btn btn-font-size" id="btn-font-down"
-                title="Decrease Font Size of Selection">A-</button>
-
-            <!-- Dynamic Theme Selector -->
-            <div class="theme-select-container">
-                <span class="theme-select-label">🎨 थीम:</span>
-                <select id="theme-selector" class="theme-select">
-                    <option value="default" selected>सतरंगी (Rainbow)</option>
-                    <option value="theme-formal">प्रशासनिक (Navy/Gold)</option>
-                </select>
+    <div class="sidebar sidebar-left" role="toolbar" aria-label="मुख्य नियंत्रण - बायाँ">
+        <!-- History & Cloud Group -->
+        <div class="control-group">
+            <div class="control-group-label">History & Cloud</div>
+            <div class="control-group-buttons">
+                <button class="master-btn btn-clear" id="btn-undo" title="Undo (Ctrl+Z)" disabled>↩️</button>
+                <button class="master-btn btn-clear" id="btn-redo" title="Redo (Ctrl+Y)" disabled>↪️</button>
+                <button class="master-btn btn-cloud-save" id="btn-cloud-save"
+                    style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;"
+                    title="Save to Cloud">☁️ Save</button>
+                <button class="master-btn btn-cloud-load" id="btn-cloud-load"
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white;"
+                    title="Load from Cloud">☁️ Load</button>
+                <button class="master-btn btn-clear" id="btn-clear" title="Clear Data">🔄 Clear</button>
             </div>
+        </div>
 
-            <!-- Preview Scaler Slider -->
-            <div class="scale-control-container">
-                <span>🔍 एडिट ज़ूम:</span>
-                <button class="scale-btn" id="btn-scale-down">-</button>
-                <span id="scale-indicator">100 </span>
-                <button class="scale-btn" id="btn-scale-up">+</button>
+        <!-- Page Management Group -->
+        <div class="control-group">
+            <div class="control-group-label">Pages</div>
+            <div class="control-group-buttons">
+                <button class="master-btn btn-add-page" id="btn-add-page">📄 New Page</button>
+                <button class="master-btn btn-paste-page" id="btn-paste-page">📋 Paste Page</button>
+                <button class="master-btn btn-multi-upload" id="btn-multi-upload">🖼️ Multi Upload</button>
+                <button class="master-btn btn-delete-page" id="btn-delete-page">🗑️ Delete</button>
             </div>
+        </div>
 
-            <span class="page-counter" id="page-counter" aria-live="polite">📃 1 पेज</span>
+        <!-- Page Size Group -->
+        <div class="control-group">
+            <div class="control-group-label">Size (mm)</div>
+            <div class="control-group-buttons" style="display:flex; align-items:center; gap:4px;">
+                <span style="font-size:12px; color:#94a3b8;">W:</span>
+                <button class="master-btn" id="btn-width-down" style="padding:4px 8px; font-size:12px;" title="Decrease Width">-</button>
+                <span id="label-width" style="font-size:12px; color:white; min-width: 25px; text-align: center;">356</span>
+                <button class="master-btn" id="btn-width-up" style="padding:4px 8px; font-size:12px;" title="Increase Width">+</button>
+                
+                <span style="font-size:12px; color:#94a3b8; margin-left:8px;">H:</span>
+                <button class="master-btn" id="btn-height-down" style="padding:4px 8px; font-size:12px;" title="Decrease Height">-</button>
+                <span id="label-height" style="font-size:12px; color:white; min-width: 25px; text-align: center;">280</span>
+                <button class="master-btn" id="btn-height-up" style="padding:4px 8px; font-size:12px;" title="Increase Height">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         WORKSPACE CONTAINER
+    ========================================================= -->
+    <div class="workspace-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1400px; margin: 0 auto 16px auto; padding: 0 20px;">
+            <div class="info-text" style="margin: 0;">
+                <b>Select:</b> Page Click &nbsp;|&nbsp;
+                <b>Move Box:</b> Black Bar / Arrows &nbsp;|&nbsp;
+                <b>Resize:</b> Corners &nbsp;|&nbsp;
+                <b>Rotate:</b> R key / Blue Btn &nbsp;|&nbsp;
+                <b>Style:</b> Ctrl+B, A+, A- &nbsp;|&nbsp;
+                <b>Undo:</b> Ctrl+Z
+            </div>
+            <span class="page-counter" id="page-counter" aria-live="polite"
+                style="margin: 0; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px;">📃 1 पेज</span>
         </div>
 
         <!-- Hidden file input -->
         <input type="file" id="multi-file-input" multiple accept="image/*" hidden>
 
-        <div class="info-text">
-            <b>Select:</b> पेज क्लिक &nbsp;|&nbsp;
-            <b>Move Box:</b> काला बार खींचें / Arrow keys &nbsp;|&nbsp;
-            <b>Resize Box:</b> कोने खींचें &nbsp;|&nbsp;
-            <b>Image Reset:</b> Dbl-click &nbsp;|&nbsp;
-            <b>Rotate:</b> R key / नीला बटन &nbsp;|&nbsp;
-            <b>Text Style:</b> Bold (Ctrl+B), A+ (Font Plus), A- (Font Minus) &nbsp;|&nbsp;
-            <b>Undo:</b> Ctrl+Z
-        </div>
-    </div>
-
-    <!-- =========================================================
-         ALL PAGES WORKSPACE WRAPPER
-    ========================================================= -->
-    <div id="all-pages-wrapper">
+        <!-- =========================================================
+             ALL PAGES WORKSPACE WRAPPER
+        ========================================================= -->
+        <div id="all-pages-wrapper">
 
         <!-- PAGE 1: PAC REPORT (MATCHING IMAGE_6713BB.JPG & IMAGE_671EE2.PNG) -->
         <div class="a4-page" id="report-page" tabindex="0">
@@ -1072,13 +1560,13 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 12.5mm">क्र०सं०</th>
-                            <th style="width: 16mm">वाहिनी</th>
-                            <th style="width: 16mm">दल</th>
-                            <th style="width: 40mm">दलनायक/प्रभारी का नाम</th>
-                            <th style="width: 90mm">व्यवस्थापन</th>
-                            <th style="width: 18mm">कोर्स</th>
-                            <th style="width: auto">अध्याय/अभ्यास का विवरण</th>
+                            <th style="width: var(--col1-width, 12.5mm)">क्र०सं०</th>
+                            <th style="width: var(--col2-width, 16mm)">वाहिनी</th>
+                            <th style="width: var(--col3-width, 16mm)">दल</th>
+                            <th style="width: var(--col4-width, 40mm)">दलनायक/प्रभारी का नाम</th>
+                            <th style="width: var(--col5-width, 90mm)">व्यवस्थापन</th>
+                            <th style="width: var(--col6-width, 18mm)">कोर्स</th>
+                            <th style="width: var(--col7-width, auto)">अध्याय/अभ्यास का विवरण</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1170,9 +1658,139 @@
         </div>
 
     </div>
+    </div> <!-- Close workspace-container -->
+
+    <!-- =========================================================
+         RIGHT SIDEBAR
+    ========================================================= -->
+    <div class="sidebar sidebar-right" role="toolbar" aria-label="मुख्य नियंत्रण - दायाँ">
+        <!-- Table Columns Group -->
+        <div class="control-group">
+            <div class="control-group-label" title="Column Widths (%)">Table Cols</div>
+            <div class="control-group-buttons" style="display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap;">
+                <input type="text" id="col1-width" placeholder="C1" title="Col 1 (क्र०सं०)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col2-width" placeholder="C2" title="Col 2 (वाहिनी)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col3-width" placeholder="C3" title="Col 3 (दल)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col4-width" placeholder="C4" title="Col 4 (दलनायक)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col5-width" placeholder="C5" title="Col 5 (व्यवस्थापन)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col6-width" placeholder="C6" title="Col 6 (कोर्स)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+                <input type="text" id="col7-width" placeholder="C7" title="Col 7 (विवरण)" style="width:30px; height:22px; background:#1e293b; color:white; border:1px solid #475569; border-radius:4px; text-align:center; font-size:11px;">
+            </div>
+        </div>
+
+        <!-- Export Group -->
+        <div class="control-group">
+            <div class="control-group-label">Export</div>
+            <div class="control-group-buttons">
+                <button class="master-btn btn-pdf" id="btn-pdf">📄 PDF</button>
+                <button class="master-btn btn-print" id="btn-print">🖨️ Print</button>
+            </div>
+        </div>
+
+        <!-- Formatting Group -->
+        <div class="control-group">
+            <div class="control-group-label">Format</div>
+            <div class="control-group-buttons">
+                <button class="master-btn btn-bold" id="btn-bold" title="Select text and click to bold (Ctrl+B)">𝐁 Bold</button>
+                <button class="master-btn btn-font-size" id="btn-font-up" title="Increase Font Size of Selection">A+</button>
+                <button class="master-btn btn-font-size" id="btn-font-down" title="Decrease Font Size of Selection">A-</button>
+            </div>
+        </div>
+
+        <!-- View Settings Group -->
+        <div class="control-group">
+            <div class="control-group-label">View</div>
+            <div class="control-group-buttons">
+                <div class="theme-select-container">
+                    <span class="theme-select-label">🎨</span>
+                    <select id="theme-selector" class="theme-select">
+                        <option value="default" selected>सतरंगी (Rainbow)</option>
+                        <option value="theme-formal">प्रशासनिक (Navy/Gold)</option>
+                    </select>
+                </div>
+                <div class="scale-control-container">
+                    <span>🔍</span>
+                    <button class="scale-btn" id="btn-scale-down">-</button>
+                    <span id="scale-indicator">100 </span>
+                    <button class="scale-btn" id="btn-scale-up">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Toast container -->
+    <!-- Cloud Load Modal -->
+    <div class="cloud-modal-overlay" id="cloud-modal">
+        <div class="cloud-modal-content">
+            <div class="cloud-modal-header">
+                <h3 class="cloud-modal-title">☁️ Version History</h3>
+                <button class="cloud-modal-close" id="cloud-modal-close">&times;</button>
+            </div>
+            <div class="cloud-modal-body" id="cloud-modal-list">
+                <div class="cloud-modal-loading">Loading backups...</div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+    <!-- Mobile Bottom Action Bar -->
+    <div class="mobile-bottom-bar" id="mobile-bottom-bar">
+        <button class="mobile-action-btn" id="m-btn-page" title="New Photo Page">
+            <span class="btn-icon">📄</span>
+            <span>+पेज</span>
+        </button>
+        <button class="mobile-action-btn" id="m-btn-upload" title="Multi Upload Photos">
+            <span class="btn-icon">🖼️</span>
+            <span>फोटो</span>
+        </button>
+        <button class="mobile-action-btn" id="m-btn-cloud" title="Cloud Save / History">
+            <span class="btn-icon">☁️</span>
+            <span>क्लाउड</span>
+        </button>
+        <button class="mobile-action-btn" id="m-btn-pdf" title="Generate PDF">
+            <span class="btn-icon">📄</span>
+            <span>PDF</span>
+        </button>
+        <button class="mobile-action-btn" id="m-btn-menu-left" title="Main Menu">
+            <span class="btn-icon">☰</span>
+            <span>मेनू</span>
+        </button>
+        <button class="mobile-action-btn" id="m-btn-menu-right" title="Settings & View">
+            <span class="btn-icon">⚙️</span>
+            <span>सेटिंग्स</span>
+        </button>
+    </div>
+
+    <!-- =========================================================
+         FIREBASE SDK SETUP
+    ========================================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQYLPP6HDgyblCC13_wPik-LhIT6h0zr8",
+            authDomain: "omrsheet-edca2.firebaseapp.com",
+            projectId: "omrsheet-edca2",
+            storageBucket: "omrsheet-edca2.firebasestorage.app",
+            messagingSenderId: "692085753827",
+            appId: "1:692085753827:web:b4163817b09b01698cc2d6",
+            measurementId: "G-21CZBEXSZK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.firebaseDB = db;
+        window.firebaseSetDoc = setDoc;
+        window.firebaseDoc = doc;
+        window.firebaseCollection = collection;
+        window.firebaseGetDocs = getDocs;
+        window.firebaseQuery = query;
+        window.firebaseOrderBy = orderBy;
+        window.firebaseDeleteDoc = deleteDoc;
+    </script>
 
     <!-- =========================================================
          JAVASCRIPT ENGINE
@@ -1223,8 +1841,149 @@
         }
 
         /* ============================================================
+           VIBRATION & TOUCH FEEDBACK ENGINE
+        ============================================================ */
+        function vibrate(ms = 25) {
+            if (navigator.vibrate) {
+                try { navigator.vibrate(ms); } catch (_) {}
+            }
+        }
+
+        /* ============================================================
+           SIDEBAR AUTO-HIDE & BACKDROP LOGIC
+        ============================================================ */
+        const sidebarLeft = document.querySelector('.sidebar-left');
+        const sidebarRight = document.querySelector('.sidebar-right');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const triggerLeft = document.getElementById('trigger-left');
+        const triggerRight = document.getElementById('trigger-right');
+        const btnMenuLeft = document.getElementById('btn-menu-left');
+        const btnMenuRight = document.getElementById('btn-menu-right');
+        const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+        let hideTimerLeft = null;
+        let hideTimerRight = null;
+
+        function closeAllSidebars() {
+            if (sidebarLeft) sidebarLeft.classList.remove('active');
+            if (sidebarRight) sidebarRight.classList.remove('active');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        }
+
+        function hideLeft() {
+            hideTimerLeft = setTimeout(() => {
+                if (sidebarLeft) sidebarLeft.classList.remove('active');
+                if (sidebarOverlay && (!sidebarRight || !sidebarRight.classList.contains('active'))) {
+                    sidebarOverlay.classList.remove('active');
+                }
+            }, 2000);
+        }
+
+        function showLeft() {
+            clearTimeout(hideTimerLeft);
+            if (sidebarRight) sidebarRight.classList.remove('active');
+            if (sidebarLeft) sidebarLeft.classList.add('active');
+            if (sidebarOverlay) sidebarOverlay.classList.add('active');
+        }
+
+        function hideRight() {
+            hideTimerRight = setTimeout(() => {
+                if (sidebarRight) sidebarRight.classList.remove('active');
+                if (sidebarOverlay && (!sidebarLeft || !sidebarLeft.classList.contains('active'))) {
+                    sidebarOverlay.classList.remove('active');
+                }
+            }, 2000);
+        }
+
+        function showRight() {
+            clearTimeout(hideTimerRight);
+            if (sidebarLeft) sidebarLeft.classList.remove('active');
+            if (sidebarRight) sidebarRight.classList.add('active');
+            if (sidebarOverlay) sidebarOverlay.classList.add('active');
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', closeAllSidebars);
+            sidebarOverlay.addEventListener('touchstart', closeAllSidebars, { passive: true });
+        }
+
+        if (!isTouchDevice) {
+            if (triggerLeft) triggerLeft.addEventListener('mouseenter', showLeft);
+            if (btnMenuLeft) btnMenuLeft.addEventListener('mouseenter', showLeft);
+            if (sidebarLeft) sidebarLeft.addEventListener('mouseenter', showLeft);
+            
+            if (triggerLeft) triggerLeft.addEventListener('mouseleave', hideLeft);
+            if (btnMenuLeft) btnMenuLeft.addEventListener('mouseleave', hideLeft);
+            if (sidebarLeft) sidebarLeft.addEventListener('mouseleave', hideLeft);
+
+            if (triggerRight) triggerRight.addEventListener('mouseenter', showRight);
+            if (btnMenuRight) btnMenuRight.addEventListener('mouseenter', showRight);
+            if (sidebarRight) sidebarRight.addEventListener('mouseenter', showRight);
+            
+            if (triggerRight) triggerRight.addEventListener('mouseleave', hideRight);
+            if (btnMenuRight) btnMenuRight.addEventListener('mouseleave', hideRight);
+            if (sidebarRight) sidebarRight.addEventListener('mouseleave', hideRight);
+        }
+
+        if (btnMenuLeft) {
+            btnMenuLeft.addEventListener('click', (e) => {
+                e.stopPropagation();
+                vibrate(20);
+                if (sidebarLeft && sidebarLeft.classList.contains('active')) closeAllSidebars();
+                else showLeft();
+            });
+        }
+
+        if (btnMenuRight) {
+            btnMenuRight.addEventListener('click', (e) => {
+                e.stopPropagation();
+                vibrate(20);
+                if (sidebarRight && sidebarRight.classList.contains('active')) closeAllSidebars();
+                else showRight();
+            });
+        }
+
+        /* ============================================================
            EVENT BINDINGS
         ============================================================ */
+        let customPageWidth = parseInt(localStorage.getItem('pageWidth')) || 356;
+        let customPageHeight = parseInt(localStorage.getItem('pageHeight')) || 280;
+
+        function updatePageSizeUI() {
+            document.documentElement.style.setProperty('--page-width', customPageWidth + 'mm');
+            document.documentElement.style.setProperty('--page-height', customPageHeight + 'mm');
+            document.getElementById('label-width').textContent = customPageWidth;
+            document.getElementById('label-height').textContent = customPageHeight;
+            localStorage.setItem('pageWidth', customPageWidth);
+            localStorage.setItem('pageHeight', customPageHeight);
+        }
+
+        document.getElementById('btn-width-down').addEventListener('click', () => { customPageWidth -= 2; updatePageSizeUI(); });
+        document.getElementById('btn-width-up').addEventListener('click', () => { customPageWidth += 2; updatePageSizeUI(); });
+        document.getElementById('btn-height-down').addEventListener('click', () => { customPageHeight -= 2; updatePageSizeUI(); });
+        document.getElementById('btn-height-up').addEventListener('click', () => { customPageHeight += 2; updatePageSizeUI(); });
+        updatePageSizeUI();
+
+        for (let i = 1; i <= 7; i++) {
+            const input = document.getElementById(`col${i}-width`);
+            const saved = localStorage.getItem(`col${i}Width`);
+            if (saved) {
+                input.value = saved;
+                document.documentElement.style.setProperty(`--col${i}-width`, saved.includes('%') || saved.includes('mm') || saved.includes('px') || saved === 'auto' ? saved : saved + '%');
+            }
+            input.addEventListener('input', (e) => {
+                let val = e.target.value.trim();
+                if (val && !isNaN(val)) val += '%';
+                if (!val) {
+                    document.documentElement.style.removeProperty(`--col${i}-width`);
+                    localStorage.removeItem(`col${i}Width`);
+                } else {
+                    document.documentElement.style.setProperty(`--col${i}-width`, val);
+                    localStorage.setItem(`col${i}Width`, e.target.value.trim());
+                }
+            });
+        }
+
         document.getElementById('btn-undo').addEventListener('click', undo);
         document.getElementById('btn-redo').addEventListener('click', redo);
         document.getElementById('btn-add-page').addEventListener('click', addPhotoPage);
@@ -1340,12 +2099,42 @@
         }
 
         /* ============================================================
-           WORKSPACE SCALING (ZOOM) CONTROL
+           WORKSPACE SCALING (ZOOM & MOBILE AUTO-FIT) CONTROL
         ============================================================ */
-        function adjustWorkspaceScale(delta) {
-            currentScale = Math.min(1.5, Math.max(0.4, currentScale + delta));
+        let isAutoFitMode = true;
+
+        function calculateAutoFitScale() {
+            const pageWidthPx = customPageWidth * 3.78; // 356mm * 3.78 ≈ 1345px
+            const screenW = window.innerWidth;
+            const padding = screenW <= 768 ? 16 : 60;
+            const usableW = screenW - padding;
+            let target = usableW / pageWidthPx;
+            if (screenW <= 768) {
+                return Math.min(1.0, Math.max(0.2, Math.round(target * 100) / 100));
+            }
+            return Math.min(0.9, Math.max(0.55, Math.round(target * 100) / 100));
+        }
+
+        function applyAutoFit() {
+            isAutoFitMode = true;
+            currentScale = calculateAutoFitScale();
             wrapper.style.transform = `scale(${currentScale})`;
-            document.getElementById('scale-indicator').textContent = `${Math.round(currentScale * 100)}%`;
+            updateZoomIndicators();
+        }
+
+        function updateZoomIndicators() {
+            const pct = `${Math.round(currentScale * 100)}%`;
+            const indicator = document.getElementById('scale-indicator');
+            if (indicator) indicator.textContent = pct;
+            const mLabel = document.getElementById('m-zoom-label');
+            if (mLabel) mLabel.textContent = pct;
+        }
+
+        function adjustWorkspaceScale(delta) {
+            isAutoFitMode = false;
+            currentScale = Math.min(1.5, Math.max(0.2, currentScale + delta));
+            wrapper.style.transform = `scale(${currentScale})`;
+            updateZoomIndicators();
         }
 
         /* ============================================================
@@ -1662,7 +2451,7 @@
 
             pagesData.forEach(pd => {
                 if (pd.type !== 'photo') return;
-                const { pageEl, canvasId } = createPhotoPageElement(pd.canvasId);
+                const { pageEl, canvasId } = createPhotoPageElement(pd.canvasId, false);
                 wrapper.appendChild(pageEl);
                 pd.boxes.forEach(bd => {
                     bd.imgSrc = resolveUndoImageId(bd.imgSrc);
@@ -1714,6 +2503,11 @@
             if (!window.html2canvas || !window.jspdf) {
                 showToast('❌ PDF library लोड नहीं हुई। Internet connection check करें।', 'error', 6000);
                 return;
+            }
+
+            // Automatically backup to Firestore before generating PDF
+            if (window.firebaseDB && typeof backupToFirestore === 'function') {
+                backupToFirestore().catch(e => console.error("Auto backup failed:", e));
             }
 
             const btn = document.getElementById('btn-pdf');
@@ -1833,10 +2627,38 @@
 
         function blobToDataURL(blob) {
             return new Promise((resolve, reject) => {
-                const r = new FileReader();
-                r.onload = e => resolve(e.target.result);
-                r.onerror = reject;
-                r.readAsDataURL(blob);
+                const img = new Image();
+                const url = URL.createObjectURL(blob);
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1200;
+                    const MAX_HEIGHT = 1200;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    reject(new Error("Failed to load image"));
+                };
+                img.src = url;
             });
         }
 
@@ -1849,7 +2671,7 @@
 
             for (let start = 0; start < imageSrcs.length; start += PAGE_LIMIT) {
                 const chunk = imageSrcs.slice(start, start + PAGE_LIMIT);
-                const { pageEl, canvasId } = createPhotoPageElement();
+                const { pageEl, canvasId } = createPhotoPageElement(null, false);
                 wrapper.appendChild(pageEl);
                 lastPageEl = pageEl;
 
@@ -1944,7 +2766,7 @@
         /* ============================================================
            CREATE PROTO-ELEMENTS
         ============================================================ */
-        function createPhotoPageElement(existingId) {
+        function createPhotoPageElement(existingId, generateBoxes = true) {
             const pageId = existingId ||
                 ('canvas-' + Date.now() + '-' + Math.floor(Math.random() * 9999));
 
@@ -1977,7 +2799,48 @@
                 triggerAutoSave();
             });
 
+            if (generateBoxes) {
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    populate6GridBoxes(pageId);
+                }));
+            }
+
             return { pageEl: page, canvasId: pageId };
+        }
+
+        function populate6GridBoxes(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            // Only populate if empty
+            if (canvas.querySelectorAll('.resizable-box').length > 0) return;
+
+            const cW = canvas.clientWidth || 1200;
+            const cH = canvas.clientHeight || 850;
+
+            const cols = 2;
+            const rows = 3;
+            const gap = 12;
+
+            const boxW = Math.floor((cW - gap * (cols + 1)) / cols);
+            const boxH = Math.floor((cH - gap * (rows + 1)) / rows);
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const left = Math.floor(gap + c * (boxW + gap));
+                    const top = Math.floor(gap + r * (boxH + gap));
+
+                    addBoxWithData(canvasId, {
+                        left: left + 'px',
+                        top: top + 'px',
+                        width: boxW + 'px',
+                        height: boxH + 'px',
+                        imgSrc: '',
+                        imgDisplay: 'none',
+                        imgX: '0', imgY: '0', imgScale: '1', imgRotation: '0'
+                    });
+                }
+            }
+            updatePageCounter();
         }
 
         function addPhotoPage() {
@@ -2121,8 +2984,10 @@
             }
 
             box.innerHTML = `
+                <div class="move-handle" title="डिब्बे को खिसकाने के लिए खींचें">⠿⠿ DRAG TO MOVE ⠿⠿</div>
                 <div class="delete-btn"  title="हटाएं (Del key)">✕</div>
                 <div class="rotate-btn"  title="90° घुमाएं (R key)">↻</div>
+                <div class="fit-btn"     title="चित्र रीसेट/फिट">🔲</div>
                 <div class="manual-move-btn move-up" title="ऊपर खिसकाएं">▲</div>
                 <div class="manual-move-btn move-down" title="नीचे खिसकाएं">▼</div>
                 <div class="manual-move-btn move-left" title="बाएं खिसकाएं">◀</div>
@@ -2130,7 +2995,7 @@
                 <div class="box-content">
                     <label for="${inputId}" class="upload-label" style="${lblStyle}">
                         📁 CLICK TO UPLOAD<br>
-                        <small style="font-weight:normal;color:#95a5a6;">(या Ctrl+V paste करें)</small>
+                        <small style="font-weight:normal;color:#95a5a6;">(या Drag & Drop / Ctrl+V paste करें)</small>
                     </label>
                     <input type="file" id="${inputId}" hidden accept="image/*">
                     <img src="${safeSrc}" style="${imgStyle}"
@@ -2158,14 +3023,54 @@
                 loadFileIntoBox(input.files[0], img, label, box, canvasId);
             });
 
+            // Drag & drop image files directly onto box
+            box.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                box.classList.add('drag-over');
+            });
+
+            box.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                box.classList.remove('drag-over');
+            });
+
+            box.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                box.classList.remove('drag-over');
+                const dt = e.dataTransfer;
+                if (dt && dt.files && dt.files.length > 0) {
+                    let imageFile = null;
+                    for (let i = 0; i < dt.files.length; i++) {
+                        if (dt.files[i].type.startsWith('image/')) {
+                            imageFile = dt.files[i];
+                            break;
+                        }
+                    }
+                    if (imageFile) {
+                        loadFileIntoBox(imageFile, img, label, box, canvasId);
+                    }
+                }
+            });
+
             box.querySelector('.delete-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
+                vibrate(25);
                 deleteBox(box, canvasId);
             });
 
             box.querySelector('.rotate-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
+                vibrate(20);
                 rotateImage(img);
+            });
+
+            box.querySelector('.fit-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                vibrate(20);
+                fitImageToBox(img);
             });
 
             const MOVE_STEP = 5;
@@ -2582,10 +3487,76 @@
         }
 
         /* ============================================================
+           MOBILE ACTIONS & GESTURES ENGINE
+        ============================================================ */
+        const mBtnPage = document.getElementById('m-btn-page');
+        if (mBtnPage) mBtnPage.addEventListener('click', () => { vibrate(25); addPhotoPage(); });
+
+        const mBtnUpload = document.getElementById('m-btn-upload');
+        if (mBtnUpload) mBtnUpload.addEventListener('click', () => { vibrate(25); document.getElementById('multi-file-input').click(); });
+
+        const mBtnCloud = document.getElementById('m-btn-cloud');
+        if (mBtnCloud) mBtnCloud.addEventListener('click', () => { vibrate(25); openCloudLoadModal(); });
+
+        const mBtnPdf = document.getElementById('m-btn-pdf');
+        if (mBtnPdf) mBtnPdf.addEventListener('click', () => { vibrate(25); downloadPDF(); });
+
+        const mBtnMenuLeft = document.getElementById('m-btn-menu-left');
+        if (mBtnMenuLeft) mBtnMenuLeft.addEventListener('click', (e) => { vibrate(25); e.stopPropagation(); if (sidebarLeft && sidebarLeft.classList.contains('active')) closeAllSidebars(); else showLeft(); });
+
+        const mBtnMenuRight = document.getElementById('m-btn-menu-right');
+        if (mBtnMenuRight) mBtnMenuRight.addEventListener('click', (e) => { vibrate(25); e.stopPropagation(); if (sidebarRight && sidebarRight.classList.contains('active')) closeAllSidebars(); else showRight(); });
+
+        const mZoomFit = document.getElementById('m-zoom-fit');
+        if (mZoomFit) mZoomFit.addEventListener('click', () => { vibrate(20); applyAutoFit(); });
+
+        const mZoom100 = document.getElementById('m-zoom-100');
+        if (mZoom100) mZoom100.addEventListener('click', () => { vibrate(20); isAutoFitMode = false; currentScale = 1.0; wrapper.style.transform = 'scale(1.0)'; updateZoomIndicators(); });
+
+        const mZoomIn = document.getElementById('m-zoom-in');
+        if (mZoomIn) mZoomIn.addEventListener('click', () => { vibrate(15); adjustWorkspaceScale(0.08); });
+
+        const mZoomOut = document.getElementById('m-zoom-out');
+        if (mZoomOut) mZoomOut.addEventListener('click', () => { vibrate(15); adjustWorkspaceScale(-0.08); });
+
+        // Screen Resize & Orientation Change Auto-Fit Handler
+        window.addEventListener('resize', () => {
+            if (isAutoFitMode || window.innerWidth <= 768) {
+                applyAutoFit();
+            }
+        });
+        window.addEventListener('orientationchange', () => {
+            setTimeout(applyAutoFit, 250);
+        });
+
+        // Double-Tap Workspace to Toggle Zoom (Fit <-> 100%)
+        let lastTapTime = 0;
+        const workspaceContainer = document.querySelector('.workspace-container');
+        if (workspaceContainer) {
+            workspaceContainer.addEventListener('touchend', (e) => {
+                if (e.target.closest('.resizable-box') || e.target.closest('[contenteditable="true"]') || e.target.closest('button')) return;
+                const now = Date.now();
+                if (now - lastTapTime < 300) {
+                    e.preventDefault();
+                    vibrate(30);
+                    if (Math.abs(currentScale - 1.0) < 0.05) {
+                        applyAutoFit();
+                    } else {
+                        isAutoFitMode = false;
+                        currentScale = 1.0;
+                        wrapper.style.transform = 'scale(1.0)';
+                        updateZoomIndicators();
+                    }
+                }
+                lastTapTime = now;
+            });
+        }
+
+        /* ============================================================
            INITIALIZATION
         ============================================================ */
         window.addEventListener('load', () => {
-            adjustWorkspaceScale(0); // Initialize scale to 70%
+            applyAutoFit(); // Auto-fit preview to screen width on startup
             const loaded = loadAllData();
             const firstPage = wrapper.querySelector('.a4-page');
             if (firstPage) selectPage(firstPage);
@@ -2595,6 +3566,163 @@
 
             snapshotState();
         });
+
+        /* ============================================================
+           FIRESTORE BACKUP & LOAD LOGIC
+        ============================================================ */
+        async function backupToFirestore() {
+            if (!window.firebaseDB) {
+                showToast('Firebase not initialized yet!', 'error');
+                return;
+            }
+            try {
+                showToast('Uploading to Cloud...', 'info', 2000);
+                await saveAllData(true);
+
+                const rawData = localStorage.getItem(STORAGE_KEY);
+                if (!rawData) {
+                    showToast('No data to backup!', 'warn');
+                    return;
+                }
+                const pagesData = JSON.parse(rawData);
+
+                const timestamp = Date.now();
+                const reportId = 'report_' + timestamp;
+
+                const reportRef = window.firebaseDoc(window.firebaseDB, 'reports', reportId);
+                await window.firebaseSetDoc(reportRef, {
+                    updatedAt: timestamp,
+                    dateString: new Date().toLocaleString('en-IN'),
+                    totalPages: pagesData.length
+                });
+
+                for (let i = 0; i < pagesData.length; i++) {
+                    const pageRef = window.firebaseDoc(window.firebaseDB, `reports/${reportId}/pages`, `page_${i}`);
+                    await window.firebaseSetDoc(pageRef, {
+                        pageIndex: i,
+                        data: pagesData[i]
+                    });
+                }
+
+                showToast('☁️ Saved to Cloud Successfully!', 'success');
+            } catch (error) {
+                console.error("Firestore Backup Error:", error);
+                showToast('Cloud Save Failed! See console.', 'error');
+            }
+        }
+
+        async function openCloudLoadModal() {
+            if (!window.firebaseDB) {
+                showToast('Firebase not initialized yet!', 'error');
+                return;
+            }
+            const modal = document.getElementById('cloud-modal');
+            const listEl = document.getElementById('cloud-modal-list');
+            modal.classList.add('active');
+            listEl.innerHTML = '<div class="cloud-modal-loading">Loading backups...</div>';
+
+            try {
+                const reportsRef = window.firebaseCollection(window.firebaseDB, 'reports');
+                const q = window.firebaseQuery(reportsRef, window.firebaseOrderBy("updatedAt", "desc"));
+                const snapshot = await window.firebaseGetDocs(q);
+
+                if (snapshot.empty) {
+                    listEl.innerHTML = '<div class="cloud-modal-loading">No Cloud Backups found!</div>';
+                    return;
+                }
+
+                listEl.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const item = document.createElement('div');
+                    item.className = 'cloud-backup-item';
+                    item.innerHTML = `
+                        <div>
+                            <div class="cloud-backup-date">${data.dateString || new Date(data.updatedAt).toLocaleString()}</div>
+                            <div class="cloud-backup-meta">${data.totalPages} Pages Saved</div>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button class="cloud-backup-action btn-load">Load</button>
+                            <button class="cloud-backup-action btn-delete" style="background:#ef4444;">Delete</button>
+                        </div>
+                    `;
+                    item.addEventListener('click', () => {
+                        modal.classList.remove('active');
+                        loadFromFirestore(doc.id);
+                    });
+                    
+                    const deleteBtn = item.querySelector('.btn-delete');
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteFromFirestore(doc.id, item);
+                    });
+                    listEl.appendChild(item);
+                });
+            } catch (error) {
+                console.error("Fetch Backups Error:", error);
+                listEl.innerHTML = '<div class="cloud-modal-loading" style="color:#ef4444">Failed to load list.</div>';
+            }
+        }
+
+        document.getElementById('cloud-modal-close').addEventListener('click', () => {
+            document.getElementById('cloud-modal').classList.remove('active');
+        });
+
+        async function loadFromFirestore(reportId) {
+            try {
+                showToast('Downloading from Cloud...', 'info', 2000);
+                const pagesRef = window.firebaseCollection(window.firebaseDB, `reports/${reportId}/pages`);
+                const snapshot = await window.firebaseGetDocs(pagesRef);
+
+                if (snapshot.empty) {
+                    showToast('Backup is empty!', 'warn');
+                    return;
+                }
+
+                let pagesData = [];
+                snapshot.forEach(doc => {
+                    pagesData.push(doc.data());
+                });
+
+                pagesData.sort((a, b) => a.pageIndex - b.pageIndex);
+
+                const finalData = pagesData.map(p => p.data);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
+
+                showToast('☁️ Loaded from Cloud! Rebuilding...', 'success');
+                setTimeout(() => {
+                    window.removeEventListener('beforeunload', _beforeUnloadSave);
+                    location.reload();
+                }, 1000);
+            } catch (error) {
+                console.error("Firestore Load Error:", error);
+                showToast('Cloud Load Failed! See console.', 'error');
+            }
+        }
+
+        async function deleteFromFirestore(reportId, itemElement) {
+            if (!confirm('क्या आप सच में इस बैकअप को डिलीट करना चाहते हैं?')) return;
+            try {
+                showToast('Deleting backup...', 'info');
+                const pagesRef = window.firebaseCollection(window.firebaseDB, `reports/${reportId}/pages`);
+                const snapshot = await window.firebaseGetDocs(pagesRef);
+                const docs = snapshot.docs;
+                for (const d of docs) {
+                    await window.firebaseDeleteDoc(d.ref);
+                }
+                const reportRef = window.firebaseDoc(window.firebaseDB, 'reports', reportId);
+                await window.firebaseDeleteDoc(reportRef);
+
+                showToast('बैकअप डिलीट हो गया!', 'success');
+                if (itemElement) itemElement.remove();
+            } catch (error) {
+                console.error("Firestore Delete Error:", error);
+                showToast('Delete Failed!', 'error');
+            }
+        }
+
+        document.getElementById('btn-cloud-save').addEventListener('click', backupToFirestore);
+        document.getElementById('btn-cloud-load').addEventListener('click', openCloudLoadModal);
     </script>
 </body>
 
