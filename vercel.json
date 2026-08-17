@@ -1,6 +1,6 @@
 {
   "name": "abc-report",
   "rewrites": [
-    { "source": "/", "destination": "/abc.html" }
+    { "source": "/", "destination": "/index.html" }
   ]
 }

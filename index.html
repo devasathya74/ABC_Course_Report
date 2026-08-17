@@ -4,14 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
     <title>25वीं वाहिनी PAC रायबरेली — रिपोर्ट एवं फोटो एडिटर</title>
     <meta name="description" content="25वीं वाहिनी PAC रायबरेली — ABC कोर्स रिपोर्ट एवं फोटो एडिटर">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
 
     <!-- PDF Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <!-- Google Fonts for Premium Hindi Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -1479,6 +1483,24 @@
             </div>
         </div>
 
+        <!-- Offline File Backup Group -->
+        <div class="control-group">
+            <div class="control-group-label">Offline Backup</div>
+            <div class="control-group-buttons">
+                <button class="master-btn" id="btn-export-json" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white;" title="Export Backup File (.json)">💾 Export JSON</button>
+                <button class="master-btn" id="btn-import-json" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white;" title="Import Backup File (.json)">📂 Import JSON</button>
+            </div>
+        </div>
+
+        <!-- Table Rows Group -->
+        <div class="control-group">
+            <div class="control-group-label">Table Rows</div>
+            <div class="control-group-buttons">
+                <button class="master-btn" id="btn-add-row" style="background: linear-gradient(135deg, #10b981, #047857); color: white;" title="Add New Row to Table">➕ Add Row</button>
+                <button class="master-btn" id="btn-delete-row" style="background: linear-gradient(135deg, #ef4444, #b91c1c); color: white;" title="Delete Last Row from Table">➖ Remove Row</button>
+            </div>
+        </div>
+
         <!-- Page Management Group -->
         <div class="control-group">
             <div class="control-group-label">Pages</div>
@@ -1687,6 +1709,25 @@
             </div>
         </div>
 
+        <!-- Box Alignment Group -->
+        <div class="control-group">
+            <div class="control-group-label">Box Align</div>
+            <div class="control-group-buttons">
+                <button class="master-btn" id="btn-align-6grid" style="background: linear-gradient(135deg, #10b981, #059669); color: white; font-size:11px;" title="Align All 6 Boxes in 2x3 Grid Layout">✨ 2x3 Grid</button>
+                <button class="master-btn" id="btn-align-center-h" style="background: #334155; color: #38bdf8; border: 1px solid #38bdf8; font-size:11px;" title="Align Box Center Horizontally">↔️ Center H</button>
+                <button class="master-btn" id="btn-align-center-v" style="background: #334155; color: #38bdf8; border: 1px solid #38bdf8; font-size:11px;" title="Align Box Center Vertically">↕️ Center V</button>
+                <button class="master-btn" id="btn-equalize-boxes" style="background: #334155; color: #f59e0b; border: 1px solid #f59e0b; font-size:11px;" title="Set Standard Box Size (240x180)">📐 Standard</button>
+            </div>
+        </div>
+
+        <!-- Help & Shortcuts Group -->
+        <div class="control-group">
+            <div class="control-group-label">Help</div>
+            <div class="control-group-buttons">
+                <button class="master-btn" id="btn-help-shortcuts" style="background: linear-gradient(135deg, #6366f1, #4338ca); color: white;" title="View Keyboard Shortcuts & Usage Tips">❓ Shortcuts</button>
+            </div>
+        </div>
+
         <!-- Formatting Group -->
         <div class="control-group">
             <div class="control-group-label">Format</div>
@@ -1718,7 +1759,9 @@
         </div>
     </div>
 
-    <!-- Toast container -->
+    <!-- Hidden JSON file input -->
+    <input type="file" id="json-file-input" accept=".json" hidden>
+
     <!-- Cloud Load Modal -->
     <div class="cloud-modal-overlay" id="cloud-modal">
         <div class="cloud-modal-content">
@@ -1728,6 +1771,52 @@
             </div>
             <div class="cloud-modal-body" id="cloud-modal-list">
                 <div class="cloud-modal-loading">Loading backups...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div class="cloud-modal-overlay" id="shortcuts-modal">
+        <div class="cloud-modal-content" style="max-width: 520px;">
+            <div class="cloud-modal-header">
+                <h3 class="cloud-modal-title">⌨️ शॉर्टकट कुंजी व सहायता निर्देश</h3>
+                <button class="cloud-modal-close" id="shortcuts-modal-close">&times;</button>
+            </div>
+            <div class="cloud-modal-body" style="padding: 16px; font-size: 13px; line-height: 1.7; color: #cbd5e1;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 8px; font-weight: bold; color: #38bdf8;">Ctrl + Z</td>
+                        <td style="padding: 8px;">पिछला कार्य वापस लाएं (Undo)</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 8px; font-weight: bold; color: #38bdf8;">Ctrl + Y</td>
+                        <td style="padding: 8px;">पुनः लागू करें (Redo)</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 8px; font-weight: bold; color: #38bdf8;">Ctrl + B</td>
+                        <td style="padding: 8px;">चयनित टेक्स्ट को बोल्ड करें</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 8px; font-weight: bold; color: #38bdf8;">Arrow Keys</td>
+                        <td style="padding: 8px;">फोटो डिब्बे को 5px खिसकाएं (Shift दबाकर 20px)</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 8px; font-weight: bold; color: #38bdf8;">Delete / Backspace</td>
+                        <td style="padding: 8px;">चयनित फोटो डिब्बा हटाएं</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 8px; font-weight: bold; color: #38bdf8;">R Key</td>
+                        <td style="padding: 8px;">फोटो को 90° घुमाएं</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 8px; font-weight: bold; color: #38bdf8;">Double Click Photo</td>
+                        <td style="padding: 8px;">फोटो को डिब्बे के आकार में रीसेट करें</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-weight: bold; color: #38bdf8;">Drag & Drop</td>
+                        <td style="padding: 8px;">फोटो फ़ाइल को सीधे डिब्बे पर ड्रॉप करें</td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>
@@ -1993,6 +2082,35 @@
         document.getElementById('btn-print').addEventListener('click', () => window.print());
         document.getElementById('btn-clear').addEventListener('click', clearSavedData);
 
+        // Offline JSON Backup handlers
+        document.getElementById('btn-export-json').addEventListener('click', exportJSONBackup);
+        document.getElementById('btn-import-json').addEventListener('click', () => {
+            document.getElementById('json-file-input').click();
+        });
+        document.getElementById('json-file-input').addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                importJSONBackup(this.files[0]);
+                this.value = '';
+            }
+        });
+
+        // Table Rows handlers
+        document.getElementById('btn-add-row').addEventListener('click', addTableRow);
+        document.getElementById('btn-delete-row').addEventListener('click', deleteTableRow);
+
+        // Box Alignment handlers
+        document.getElementById('btn-align-6grid').addEventListener('click', realignCurrentPage6Grid);
+        document.getElementById('btn-align-center-h').addEventListener('click', alignSelectedBoxCenterH);
+        document.getElementById('btn-align-center-v').addEventListener('click', alignSelectedBoxCenterV);
+        document.getElementById('btn-equalize-boxes').addEventListener('click', equalizeBoxSizes);
+
+        // Shortcuts Help Modal handlers
+        document.getElementById('btn-help-shortcuts').addEventListener('click', openShortcutsModal);
+        document.getElementById('shortcuts-modal-close').addEventListener('click', closeShortcutsModal);
+        document.getElementById('shortcuts-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'shortcuts-modal') closeShortcutsModal();
+        });
+
         // Bold and Font Size handlers with mousedown to preserve text selection context
         document.getElementById('btn-bold').addEventListener('mousedown', (e) => {
             e.preventDefault(); // Prevents selection loss
@@ -2044,6 +2162,225 @@
             }
             this.value = ''; // Reset element
         });
+
+        /* ============================================================
+           TABLE ROW MANAGEMENT ENGINE
+        ============================================================ */
+        function addTableRow() {
+            const tbody = document.querySelector('#report-page table tbody');
+            if (!tbody) {
+                showToast('⚠️ रिपोर्ट टेबल नहीं मिली', 'warn');
+                return;
+            }
+            snapshotState();
+            const rows = tbody.querySelectorAll('tr');
+            const newRowIdx = rows.length + 1;
+            const numStr = String(newRowIdx).padStart(2, '0');
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td contenteditable="true" data-save-id="cell-${newRowIdx}-1">${numStr}</td>
+                <td contenteditable="true" data-save-id="cell-${newRowIdx}-3">दल ${newRowIdx}</td>
+                <td contenteditable="true" data-save-id="cell-${newRowIdx}-4">प्रभारी का नाम</td>
+                <td contenteditable="true" data-save-id="cell-${newRowIdx}-5">वाहिनी मुख्यालय 25 वाहिनी पीएसी, रायबरेली</td>
+                <td contenteditable="true" data-save-id="cell-${newRowIdx}-6">कोर्स</td>
+                <td contenteditable="true" data-save-id="cell-${newRowIdx}-7">कार्य-</td>
+            `;
+
+            tbody.appendChild(tr);
+
+            const cell12 = tbody.querySelector('[data-save-id="cell-1-2"]');
+            if (cell12) cell12.setAttribute('rowspan', newRowIdx);
+
+            tr.querySelectorAll('[contenteditable="true"]').forEach(cell => {
+                cell.addEventListener('input', triggerAutoSave);
+                cell.addEventListener('blur', triggerAutoSave);
+            });
+
+            triggerAutoSave();
+            showToast(`➕ नया रो (${numStr}) जोड़ा गया`, 'success', 2000);
+        }
+
+        function deleteTableRow() {
+            const tbody = document.querySelector('#report-page table tbody');
+            if (!tbody) return;
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length <= 1) {
+                showToast('⚠️ कम से कम 1 टेबल रो होना आवश्यक है', 'warn');
+                return;
+            }
+            snapshotState();
+            rows[rows.length - 1].remove();
+
+            const newCount = rows.length - 1;
+            const cell12 = tbody.querySelector('[data-save-id="cell-1-2"]');
+            if (cell12) cell12.setAttribute('rowspan', newCount);
+
+            triggerAutoSave();
+            showToast('🗑️ टेबल रो हटाया गया', 'info', 2000);
+        }
+
+        /* ============================================================
+           OFFLINE JSON BACKUP & RESTORE ENGINE
+        ============================================================ */
+        function exportJSONBackup() {
+            saveAllData(true);
+            const rawData = localStorage.getItem(STORAGE_KEY);
+            if (!rawData) {
+                showToast('⚠️ बैकअप के लिए कोई डेटा नहीं है', 'warn');
+                return;
+            }
+            const blob = new Blob([rawData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const now = new Date();
+            const dd = String(now.getDate()).padStart(2, '0');
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const yyyy = now.getFullYear();
+            a.href = url;
+            a.download = `ABC_Course_Report_Backup_${dd}-${mm}-${yyyy}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('💾 ऑफ़लाइन JSON बैकअप डाउनलोड हुआ!', 'success', 4000);
+        }
+
+        function importJSONBackup(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!Array.isArray(data)) {
+                        showToast('❌ अमान्य बैकअप फ़ाइल!', 'error', 4000);
+                        return;
+                    }
+                    snapshotState();
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                    restoreState(data);
+                    showToast('📂 JSON बैकअप सफलतापूर्वक रीस्टोर हुआ!', 'success', 4000);
+                } catch (err) {
+                    console.error('JSON Import Error:', err);
+                    showToast('❌ JSON फ़ाइल पढ़ने में त्रुटि!', 'error', 4000);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        /* ============================================================
+           PHOTO BOX ALIGNMENT UTILS
+        ============================================================ */
+        function realignCurrentPage6Grid() {
+            const selectedPage = document.querySelector('.a4-page.selected-page') || document.querySelector('.a4-page:not(#report-page)');
+            if (!selectedPage) {
+                showToast('⚠️ फोटो वाला पेज चुनें', 'warn', 2500);
+                return;
+            }
+            const canvas = selectedPage.querySelector('.inner-border-canvas');
+            if (!canvas) return;
+
+            snapshotState();
+            const cW = canvas.clientWidth || 1200;
+            const cH = canvas.clientHeight || 850;
+
+            const cols = 2;
+            const rows = 3;
+            const gap = 12;
+
+            const boxW = Math.floor((cW - gap * (cols + 1)) / cols);
+            const boxH = Math.floor((cH - gap * (rows + 1)) / rows);
+
+            const boxes = Array.from(canvas.querySelectorAll('.resizable-box'));
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const idx = r * cols + c;
+                    const left = Math.floor(gap + c * (boxW + gap)) + 'px';
+                    const top = Math.floor(gap + r * (boxH + gap)) + 'px';
+                    const width = boxW + 'px';
+                    const height = boxH + 'px';
+
+                    if (idx < boxes.length) {
+                        boxes[idx].style.left = left;
+                        boxes[idx].style.top = top;
+                        boxes[idx].style.width = width;
+                        boxes[idx].style.height = height;
+                        const img = boxes[idx].querySelector('img');
+                        if (img) {
+                            img.dataset.x = 0; img.dataset.y = 0;
+                            img.dataset.scale = 1; img.dataset.rotation = 0;
+                            applyImageTransform(img);
+                        }
+                    } else {
+                        addBoxWithData(canvas.id, {
+                            left, top, width, height,
+                            imgSrc: '', imgDisplay: 'none',
+                            imgX: '0', imgY: '0', imgScale: '1', imgRotation: '0'
+                        });
+                    }
+                }
+            }
+
+            triggerAutoSave();
+            showToast('✨ 6-Grid (2x3) अलाइनमेंट पूर्ण हुआ!', 'success', 2500);
+        }
+
+        function alignSelectedBoxCenterH() {
+            const selected = document.querySelector('.resizable-box.selected-box');
+            if (!selected) {
+                showToast('⚠️ कृपया पहले किसी फोटो डिब्बे पर क्लिक करें', 'warn', 2500);
+                return;
+            }
+            const canvas = selected.closest('.inner-border-canvas');
+            if (!canvas) return;
+            snapshotState();
+            const canvasW = canvas.clientWidth;
+            const boxW = selected.offsetWidth;
+            selected.style.left = Math.round((canvasW - boxW) / 2) + 'px';
+            triggerAutoSave();
+            showToast('↔️ डिब्बा बीच (Horizontal) में अलाइन हुआ', 'success', 1500);
+        }
+
+        function alignSelectedBoxCenterV() {
+            const selected = document.querySelector('.resizable-box.selected-box');
+            if (!selected) {
+                showToast('⚠️ कृपया पहले किसी फोटो डिब्बे पर क्लिक करें', 'warn', 2500);
+                return;
+            }
+            const canvas = selected.closest('.inner-border-canvas');
+            if (!canvas) return;
+            snapshotState();
+            const canvasH = canvas.clientHeight;
+            const boxH = selected.offsetHeight;
+            selected.style.top = Math.round((canvasH - boxH) / 2) + 'px';
+            triggerAutoSave();
+            showToast('↕️ डिब्बा बीच (Vertical) में अलाइन हुआ', 'success', 1500);
+        }
+
+        function equalizeBoxSizes() {
+            const selected = document.querySelector('.resizable-box.selected-box');
+            if (!selected) {
+                showToast('⚠️ कृपया पहले किसी फोटो डिब्बे पर क्लिक करें', 'warn', 2500);
+                return;
+            }
+            snapshotState();
+            selected.style.width = '240px';
+            selected.style.height = '180px';
+            triggerAutoSave();
+            showToast('📐 मानक आकार (240x180 px) सेट हुआ', 'success', 1500);
+        }
+
+        /* ============================================================
+           KEYBOARD SHORTCUTS MODAL
+        ============================================================ */
+        function openShortcutsModal() {
+            const modal = document.getElementById('shortcuts-modal');
+            if (modal) modal.classList.add('active');
+        }
+
+        function closeShortcutsModal() {
+            const modal = document.getElementById('shortcuts-modal');
+            if (modal) modal.classList.remove('active');
+        }
 
 
 
@@ -2524,10 +2861,14 @@
 
             try {
                 const { jsPDF } = window.jspdf;
+                const pdfW = customPageWidth || 356;
+                const pdfH = customPageHeight || 280;
+                const isLandscape = pdfW >= pdfH;
+
                 const pdf = new jsPDF({
-                    orientation: 'landscape',
+                    orientation: isLandscape ? 'landscape' : 'portrait',
                     unit: 'mm',
-                    format: 'a4'
+                    format: [pdfW, pdfH]
                 });
 
                 const pages = document.querySelectorAll('.a4-page');
@@ -2545,8 +2886,8 @@
                     });
 
                     const imgData = canvas.toDataURL('image/jpeg', 0.95);
-                    if (i > 0) pdf.addPage();
-                    pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+                    if (i > 0) pdf.addPage([pdfW, pdfH], isLandscape ? 'landscape' : 'portrait');
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
                 }
 
                 const now = new Date();
@@ -2723,6 +3064,9 @@
 
         function computeSmartLayout(ratios, cW, cH) {
             const count = ratios.length;
+            if (count <= 6) {
+                return { cols: 2, rows: 3 };
+            }
             const landscape = ratios.filter(r => r > 1.2).length;
             const portrait = ratios.filter(r => r < 0.8).length;
 
@@ -2748,7 +3092,7 @@
             if (n <= 2) return { cols: 2, rows: 1 };
             if (n <= 3) return { cols: 3, rows: 1 };
             if (n <= 4) return { cols: 2, rows: 2 };
-            if (n <= 6) return { cols: 3, rows: 2 };
+            if (n <= 6) return { cols: 2, rows: 3 };
             return { cols: 3, rows: 3 };
         }
 
@@ -2757,7 +3101,7 @@
             if (n <= 2) return { cols: 2, rows: 1 };
             if (n <= 3) return { cols: 3, rows: 1 };
             if (n <= 4) return { cols: 2, rows: 2 };
-            if (n <= 6) return { cols: 3, rows: 2 };
+            if (n <= 6) return { cols: 2, rows: 3 };
             if (n <= 9) return { cols: 3, rows: 3 };
             if (n <= 12) return { cols: 4, rows: 3 };
             return { cols: 4, rows: 4 };
@@ -2914,49 +3258,55 @@
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
 
-            const tmp = new Image();
-            tmp.onload = () => {
-                const imgW = tmp.naturalWidth || 1;
-                const imgH = tmp.naturalHeight || 1;
-                const ratio = imgW / imgH;
+            // Check if there is an empty box on this canvas
+            const emptyBoxes = Array.from(canvas.querySelectorAll('.resizable-box')).filter(box => {
+                const img = box.querySelector('img');
+                return !img || !img.src || img.style.display === 'none' || img.src === window.location.href;
+            });
 
-                const cW = canvas.clientWidth || 600;
-                const cH = canvas.clientHeight || 400;
-
-                const maxW = Math.floor(cW * 0.65);
-                const maxH = Math.floor(cH * 0.65);
-
-                let boxW, boxH;
-                if (ratio >= 1) {
-                    boxW = maxW;
-                    boxH = Math.round(boxW / ratio);
-                    if (boxH > maxH) { boxH = maxH; boxW = Math.round(boxH * ratio); }
-                } else {
-                    boxH = maxH;
-                    boxW = Math.round(boxH * ratio);
-                    if (boxW > maxW) { boxW = maxW; boxH = Math.round(boxW / ratio); }
-                }
-
-                boxW = Math.max(boxW, MIN_BOX_W);
-                boxH = Math.max(boxH, MIN_BOX_H);
-
-                const existingCount = canvas.querySelectorAll('.resizable-box').length;
-                const cascade = (existingCount % 6) * 22;
-                const left = Math.max(GAP, Math.round((cW - boxW) / 2) - cascade);
-                const top = Math.max(GAP, Math.round((cH - boxH) / 2) - cascade);
-
+            if (emptyBoxes.length > 0) {
+                const emptyBox = emptyBoxes[0];
+                const img = emptyBox.querySelector('img');
+                const label = emptyBox.querySelector('.upload-label');
                 snapshotState();
-                addBoxWithData(canvasId, {
-                    left: left + 'px',
-                    top: top + 'px',
-                    width: boxW + 'px',
-                    height: boxH + 'px',
-                    imgSrc: src, imgDisplay: 'block',
-                    imgX: '0', imgY: '0', imgScale: '1', imgRotation: '0',
-                    imgTransform: 'translate(0px,0px) scale(1) rotate(0deg)'
-                });
-            };
-            tmp.src = src;
+                img.src = src;
+                img.style.display = 'block';
+                if (label) label.style.display = 'none';
+                img.dataset.x = 0; img.dataset.y = 0;
+                img.dataset.scale = 1; img.dataset.rotation = 0;
+                applyImageTransform(img);
+                triggerAutoSave();
+                return;
+            }
+
+            // Otherwise place box in 2x3 grid slot
+            const cW = canvas.clientWidth || 1200;
+            const cH = canvas.clientHeight || 850;
+
+            const cols = 2;
+            const rows = 3;
+            const gap = 12;
+
+            const boxW = Math.floor((cW - gap * (cols + 1)) / cols);
+            const boxH = Math.floor((cH - gap * (rows + 1)) / rows);
+
+            const existingCount = canvas.querySelectorAll('.resizable-box').length;
+            const col = existingCount % cols;
+            const row = Math.floor(existingCount / cols) % rows;
+
+            const left = Math.floor(gap + col * (boxW + gap));
+            const top = Math.floor(gap + row * (boxH + gap));
+
+            snapshotState();
+            addBoxWithData(canvasId, {
+                left: left + 'px',
+                top: top + 'px',
+                width: boxW + 'px',
+                height: boxH + 'px',
+                imgSrc: src, imgDisplay: 'block',
+                imgX: '0', imgY: '0', imgScale: '1', imgRotation: '0',
+                imgTransform: 'translate(0px,0px) scale(1) rotate(0deg)'
+            });
         }
 
         function addBoxWithData(canvasId, data) {
@@ -3215,44 +3565,14 @@
 
         function loadFileIntoBox(file, img, label, box, canvasId) {
             blobToDataURL(file).then(src => {
-                const canvas = document.getElementById(canvasId);
-                const tmp = new Image();
-                tmp.onload = () => {
-                    const imgW = tmp.naturalWidth || 1;
-                    const imgH = tmp.naturalHeight || 1;
-                    const ratio = imgW / imgH;
-
-                    const cW = canvas ? canvas.clientWidth : 600;
-                    const cH = canvas ? canvas.clientHeight : 400;
-                    const maxW = Math.floor(cW * 0.65);
-                    const maxH = Math.floor(cH * 0.65);
-
-                    let boxW, boxH;
-                    if (ratio >= 1) {
-                        boxW = maxW;
-                        boxH = Math.round(boxW / ratio);
-                        if (boxH > maxH) { boxH = maxH; boxW = Math.round(boxH * ratio); }
-                    } else {
-                        boxH = maxH;
-                        boxW = Math.round(boxH * ratio);
-                        if (boxW > maxW) { boxW = maxW; boxH = Math.round(boxW / ratio); }
-                    }
-                    boxW = Math.max(boxW, MIN_BOX_W);
-                    boxH = Math.max(boxH, MIN_BOX_H);
-
-                    snapshotState();
-                    box.style.width = boxW + 'px';
-                    box.style.height = boxH + 'px';
-
-                    img.src = src;
-                    img.style.display = 'block';
-                    label.style.display = 'none';
-                    img.dataset.x = 0; img.dataset.y = 0;
-                    img.dataset.scale = 1; img.dataset.rotation = 0;
-                    applyImageTransform(img);
-                    triggerAutoSave();
-                };
-                tmp.src = src;
+                snapshotState();
+                img.src = src;
+                img.style.display = 'block';
+                if (label) label.style.display = 'none';
+                img.dataset.x = 0; img.dataset.y = 0;
+                img.dataset.scale = 1; img.dataset.rotation = 0;
+                applyImageTransform(img);
+                triggerAutoSave();
             });
         }
 
