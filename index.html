@@ -29,7 +29,7 @@
             --table-bg: #d4e157;
             --table-border: #33691e;
             --table-header-bg: #9ba34a;
-            --header-bg: linear-gradient(174deg, #e51a23 0%, #e51a23 58%, #4fa900 58.2%, #4fa900 100%);
+            --header-bg: linear-gradient(174deg, #4fa900 0%, #4fa900 58%, #e51a23 58.2%, #e51a23 100%);
             --header-text: #ffffff;
             --sub-header-bg: #fe1063;
             --sub-header-border: #0097a7;
@@ -511,7 +511,7 @@
             top: 2%;
             left: 9.2%;
             width: 82%;
-            background: linear-gradient(to bottom right, #f42424 50%, #4ea800 50%);
+            background: linear-gradient(to bottom right, #4ea800 50%, #f42424 50%);
             color: white;
             padding: 8px 20px;
             font-size: 35pt;
@@ -1855,30 +1855,35 @@
          FIREBASE SDK SETUP
     ========================================================= -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDocs, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        try {
+            const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
+            const { getFirestore, collection, doc, getDoc, setDoc, getDocs, query, orderBy, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDQYLPP6HDgyblCC13_wPik-LhIT6h0zr8",
-            authDomain: "omrsheet-edca2.firebaseapp.com",
-            projectId: "omrsheet-edca2",
-            storageBucket: "omrsheet-edca2.firebasestorage.app",
-            messagingSenderId: "692085753827",
-            appId: "1:692085753827:web:b4163817b09b01698cc2d6",
-            measurementId: "G-21CZBEXSZK"
-        };
+            const firebaseConfig = {
+                apiKey: "AIzaSyDQYLPP6HDgyblCC13_wPik-LhIT6h0zr8",
+                authDomain: "omrsheet-edca2.firebaseapp.com",
+                projectId: "omrsheet-edca2",
+                storageBucket: "omrsheet-edca2.firebasestorage.app",
+                messagingSenderId: "692085753827",
+                appId: "1:692085753827:web:b4163817b09b01698cc2d6"
+            };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
 
-        window.firebaseDB = db;
-        window.firebaseSetDoc = setDoc;
-        window.firebaseDoc = doc;
-        window.firebaseCollection = collection;
-        window.firebaseGetDocs = getDocs;
-        window.firebaseQuery = query;
-        window.firebaseOrderBy = orderBy;
-        window.firebaseDeleteDoc = deleteDoc;
+            window.firebaseDB = db;
+            window.firebaseSetDoc = setDoc;
+            window.firebaseDoc = doc;
+            window.firebaseGetDoc = getDoc;
+            window.firebaseCollection = collection;
+            window.firebaseGetDocs = getDocs;
+            window.firebaseQuery = query;
+            window.firebaseOrderBy = orderBy;
+            window.firebaseDeleteDoc = deleteDoc;
+            console.log("Firebase initialized successfully");
+        } catch (err) {
+            console.warn("Firebase SDK initialization warning (offline or adblocker active):", err);
+        }
     </script>
 
     <!-- =========================================================
@@ -2766,15 +2771,17 @@
         function restoreState(pagesData) {
             if (!pagesData || pagesData.length === 0) return false;
             wrapper.querySelectorAll('.a4-page:not(#report-page)').forEach(p => p.remove());
+            
             const firstData = pagesData[0];
-            if (firstData && firstData.type === 'report') {
+            if (firstData && (firstData.type === 'report' || firstData.contents)) {
                 const reportInner = document.getElementById('report-page').querySelector('.report-inner');
+                const contents = firstData.contents || firstData;
 
-                if (firstData.contents && Object.keys(firstData.contents).length > 0) {
-                    Object.keys(firstData.contents).forEach((key) => {
+                if (contents && typeof contents === 'object') {
+                    Object.keys(contents).forEach((key) => {
                         const targetEl = reportInner.querySelector(`[data-save-id="${key}"]`);
-                        if (targetEl) {
-                            targetEl.innerHTML = firstData.contents[key];
+                        if (targetEl && typeof contents[key] === 'string') {
+                            targetEl.innerHTML = contents[key];
                         }
                     });
                 }
@@ -2786,15 +2793,22 @@
                 }
             }
 
-            pagesData.forEach(pd => {
-                if (pd.type !== 'photo') return;
+            const startIndex = (firstData && (firstData.type === 'report' || firstData.contents)) ? 1 : 0;
+            for (let i = startIndex; i < pagesData.length; i++) {
+                const pd = pagesData[i];
+                if (!pd) continue;
+                if (pd.type === 'report') continue;
+
                 const { pageEl, canvasId } = createPhotoPageElement(pd.canvasId, false);
                 wrapper.appendChild(pageEl);
-                pd.boxes.forEach(bd => {
-                    bd.imgSrc = resolveUndoImageId(bd.imgSrc);
+
+                const boxes = pd.boxes || pd.images || [];
+                boxes.forEach(bd => {
+                    const src = bd.imgSrc || bd.src || '';
+                    bd.imgSrc = resolveUndoImageId(src);
                     addBoxWithData(canvasId, bd);
                 });
-            });
+            }
             updatePageCounter();
             return true;
         }
@@ -3324,11 +3338,17 @@
             box.tabIndex = 0;
 
             const inputId = 'file-' + Math.random().toString(36).substr(2, 9);
-            const hasImg = data.imgDisplay === 'block' && !!data.imgSrc;
-            const lblStyle = hasImg ? 'display:none' : '';
-            const imgStyle = hasImg ? '' : 'display:none';
+            const imgSrc = data.imgSrc || data.src || '';
+            const hasImg = !!imgSrc &&
+                           imgSrc !== window.location.href &&
+                           imgSrc !== 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=' &&
+                           imgSrc.length > 25 &&
+                           data.imgDisplay !== 'none';
 
-            let safeSrc = data.imgSrc || '';
+            const lblStyle = hasImg ? 'display:none' : '';
+            const imgStyle = hasImg ? 'display:block' : 'display:none';
+
+            let safeSrc = imgSrc || '';
             if (!safeSrc || safeSrc === window.location.href) {
                 safeSrc = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
             }
@@ -3349,8 +3369,8 @@
                     </label>
                     <input type="file" id="${inputId}" hidden accept="image/*">
                     <img src="${safeSrc}" style="${imgStyle}"
-                         data-x="${data.imgX || 0}" data-y="${data.imgY || 0}"
-                         data-scale="${data.imgScale || 1}" data-rotation="${data.imgRotation || 0}">
+                         data-x="${data.imgX || data.x || 0}" data-y="${data.imgY || data.y || 0}"
+                         data-scale="${data.imgScale || data.scale || 1}" data-rotation="${data.imgRotation || data.rotation || 0}">
                 </div>
                 <div class="resizer tl"></div><div class="resizer tr"></div>
                 <div class="resizer bl"></div><div class="resizer br"></div>
@@ -3364,8 +3384,9 @@
 
             if (hasImg) {
                 img.style.display = 'block';
-                img.style.transform = data.imgTransform ||
-                    `translate(${data.imgX || 0}px,${data.imgY || 0}px) scale(${data.imgScale || 1}) rotate(${data.imgRotation || 0}deg)`;
+                if (label) label.style.display = 'none';
+                img.style.transform = data.imgTransform || data.transform ||
+                    `translate(${data.imgX || data.x || 0}px,${data.imgY || data.y || 0}px) scale(${data.imgScale || data.scale || 1}) rotate(${data.imgRotation || data.rotation || 0}deg)`;
             }
 
             input.addEventListener('change', () => {
@@ -3890,9 +3911,11 @@
         /* ============================================================
            FIRESTORE BACKUP & LOAD LOGIC
         ============================================================ */
+        const CLOUD_COLLECTIONS = ['reports', 'monthly_reports'];
+
         async function backupToFirestore() {
             if (!window.firebaseDB) {
-                showToast('Firebase not initialized yet!', 'error');
+                showToast('Cloud connection unavailable (AdBlocker/Offline)', 'warn');
                 return;
             }
             try {
@@ -3909,13 +3932,25 @@
                 const timestamp = Date.now();
                 const reportId = 'report_' + timestamp;
 
+                // 1. Save main document with metadata to 'reports'
                 const reportRef = window.firebaseDoc(window.firebaseDB, 'reports', reportId);
-                await window.firebaseSetDoc(reportRef, {
-                    updatedAt: timestamp,
-                    dateString: new Date().toLocaleString('en-IN'),
-                    totalPages: pagesData.length
-                });
+                try {
+                    await window.firebaseSetDoc(reportRef, {
+                        updatedAt: timestamp,
+                        dateString: new Date().toLocaleString('en-IN'),
+                        totalPages: pagesData.length,
+                        pages: pagesData
+                    });
+                } catch (sizeErr) {
+                    // Fallback to metadata only if payload exceeds doc size
+                    await window.firebaseSetDoc(reportRef, {
+                        updatedAt: timestamp,
+                        dateString: new Date().toLocaleString('en-IN'),
+                        totalPages: pagesData.length
+                    });
+                }
 
+                // 2. Also save each page in subcollection for backward compatibility & safety
                 for (let i = 0; i < pagesData.length; i++) {
                     const pageRef = window.firebaseDoc(window.firebaseDB, `reports/${reportId}/pages`, `page_${i}`);
                     await window.firebaseSetDoc(pageRef, {
@@ -3927,13 +3962,13 @@
                 showToast('☁️ Saved to Cloud Successfully!', 'success');
             } catch (error) {
                 console.error("Firestore Backup Error:", error);
-                showToast('Cloud Save Failed! See console.', 'error');
+                showToast('Cloud Save Failed! (Disable AdBlocker if active)', 'error');
             }
         }
 
         async function openCloudLoadModal() {
             if (!window.firebaseDB) {
-                showToast('Firebase not initialized yet!', 'error');
+                showToast('Cloud connection unavailable (AdBlocker/Offline)', 'warn');
                 return;
             }
             const modal = document.getElementById('cloud-modal');
@@ -3942,24 +3977,68 @@
             listEl.innerHTML = '<div class="cloud-modal-loading">Loading backups...</div>';
 
             try {
-                const reportsRef = window.firebaseCollection(window.firebaseDB, 'reports');
-                const q = window.firebaseQuery(reportsRef, window.firebaseOrderBy("updatedAt", "desc"));
-                const snapshot = await window.firebaseGetDocs(q);
+                const backupsMap = new Map();
 
-                if (snapshot.empty) {
+                for (const collName of CLOUD_COLLECTIONS) {
+                    try {
+                        const reportsRef = window.firebaseCollection(window.firebaseDB, collName);
+                        const q = window.firebaseQuery(reportsRef, window.firebaseOrderBy("updatedAt", "desc"));
+                        const snapshot = await window.firebaseGetDocs(q);
+                        snapshot.forEach(docSnap => {
+                            if (!backupsMap.has(docSnap.id)) {
+                                backupsMap.set(docSnap.id, {
+                                    id: docSnap.id,
+                                    collection: collName,
+                                    data: docSnap.data()
+                                });
+                            }
+                        });
+                    } catch (err) {
+                        try {
+                            const reportsRef = window.firebaseCollection(window.firebaseDB, collName);
+                            const snapshot = await window.firebaseGetDocs(reportsRef);
+                            snapshot.forEach(docSnap => {
+                                if (!backupsMap.has(docSnap.id)) {
+                                    backupsMap.set(docSnap.id, {
+                                        id: docSnap.id,
+                                        collection: collName,
+                                        data: docSnap.data()
+                                    });
+                                }
+                            });
+                        } catch (e2) {
+                            console.warn(`Could not query collection "${collName}":`, e2);
+                        }
+                    }
+                }
+
+                const backupsList = Array.from(backupsMap.values());
+
+                // Sort descending by timestamp
+                backupsList.sort((a, b) => {
+                    const timeA = a.data.updatedAt || parseInt(a.id.replace(/\D/g, '')) || 0;
+                    const timeB = b.data.updatedAt || parseInt(b.id.replace(/\D/g, '')) || 0;
+                    return timeB - timeA;
+                });
+
+                if (backupsList.length === 0) {
                     listEl.innerHTML = '<div class="cloud-modal-loading">No Cloud Backups found!</div>';
                     return;
                 }
 
                 listEl.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
+                backupsList.forEach(itemInfo => {
+                    const data = itemInfo.data;
+                    const ts = data.updatedAt || parseInt(itemInfo.id.replace(/\D/g, '')) || null;
+                    const dateStr = data.dateString || (ts ? new Date(ts).toLocaleString('en-IN') : itemInfo.id);
+                    const pageCount = data.totalPages || (data.pages && Array.isArray(data.pages) ? data.pages.length : '?');
+
                     const item = document.createElement('div');
                     item.className = 'cloud-backup-item';
                     item.innerHTML = `
                         <div>
-                            <div class="cloud-backup-date">${data.dateString || new Date(data.updatedAt).toLocaleString()}</div>
-                            <div class="cloud-backup-meta">${data.totalPages} Pages Saved</div>
+                            <div class="cloud-backup-date">${dateStr}</div>
+                            <div class="cloud-backup-meta">${pageCount} Pages Saved</div>
                         </div>
                         <div style="display:flex; gap:10px;">
                             <button class="cloud-backup-action btn-load">Load</button>
@@ -3968,19 +4047,19 @@
                     `;
                     item.addEventListener('click', () => {
                         modal.classList.remove('active');
-                        loadFromFirestore(doc.id);
+                        loadFromFirestore(itemInfo.id, itemInfo.collection, data);
                     });
                     
                     const deleteBtn = item.querySelector('.btn-delete');
                     deleteBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        deleteFromFirestore(doc.id, item);
+                        deleteFromFirestore(itemInfo.id, itemInfo.collection, item);
                     });
                     listEl.appendChild(item);
                 });
             } catch (error) {
                 console.error("Fetch Backups Error:", error);
-                listEl.innerHTML = '<div class="cloud-modal-loading" style="color:#ef4444">Failed to load list.</div>';
+                listEl.innerHTML = '<div class="cloud-modal-loading" style="color:#ef4444">Failed to load list. Check AdBlocker/Network.</div>';
             }
         }
 
@@ -3988,49 +4067,139 @@
             document.getElementById('cloud-modal').classList.remove('active');
         });
 
-        async function loadFromFirestore(reportId) {
+        async function loadFromFirestore(reportId, collectionName, cachedData) {
             try {
                 showToast('Downloading from Cloud...', 'info', 2000);
-                const pagesRef = window.firebaseCollection(window.firebaseDB, `reports/${reportId}/pages`);
-                const snapshot = await window.firebaseGetDocs(pagesRef);
+                let finalData = null;
+                const targetColl = collectionName || 'reports';
 
-                if (snapshot.empty) {
-                    showToast('Backup is empty!', 'warn');
-                    return;
+                // Helper to normalize any page document/payload format
+                function parsePagePayload(raw) {
+                    if (!raw) return null;
+                    let obj = raw;
+                    if (obj.data !== undefined) {
+                        obj = obj.data;
+                    }
+                    if (typeof obj === 'string') {
+                        try {
+                            obj = JSON.parse(obj);
+                        } catch (e) {
+                            // Leave as is if not json
+                        }
+                    }
+                    if (typeof obj === 'object' && obj !== null) {
+                        if (obj.data !== undefined && typeof obj.data === 'object') {
+                            obj = obj.data;
+                        }
+                        if (!obj.type) {
+                            if (obj.boxes || obj.images || obj.canvasId) {
+                                obj.type = 'photo';
+                            } else if (obj.contents || obj.table) {
+                                obj.type = 'report';
+                            }
+                        }
+                        return obj;
+                    }
+                    return null;
                 }
 
-                let pagesData = [];
-                snapshot.forEach(doc => {
-                    pagesData.push(doc.data());
-                });
+                // Check 1: cachedData with pages array
+                if (cachedData && cachedData.pages && Array.isArray(cachedData.pages) && cachedData.pages.length > 0) {
+                    finalData = cachedData.pages.map(parsePagePayload).filter(Boolean);
+                }
 
-                pagesData.sort((a, b) => a.pageIndex - b.pageIndex);
+                // Check 2: Fetch subcollection (where Firestore stores page_0, page_1, page_2, page_3...)
+                if ((!finalData || finalData.length === 0) && window.firebaseDB && window.firebaseCollection && window.firebaseGetDocs) {
+                    const collectionsToTry = [targetColl, 'reports', 'monthly_reports'];
+                    for (const coll of collectionsToTry) {
+                        try {
+                            const pagesRef = window.firebaseCollection(window.firebaseDB, `${coll}/${reportId}/pages`);
+                            const snapshot = await window.firebaseGetDocs(pagesRef);
+                            if (snapshot && !snapshot.empty) {
+                                let pagesItems = [];
+                                snapshot.forEach(d => {
+                                    const rawData = d.data();
+                                    const idNum = parseInt(d.id.replace(/\D/g, ''));
+                                    const pageIdx = (typeof rawData.pageIndex === 'number') ? rawData.pageIndex : (isNaN(idNum) ? 0 : idNum);
+                                    const parsedContent = parsePagePayload(rawData);
+                                    if (parsedContent) {
+                                        pagesItems.push({
+                                            index: pageIdx,
+                                            id: d.id,
+                                            content: parsedContent
+                                        });
+                                    }
+                                });
 
-                const finalData = pagesData.map(p => p.data);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
+                                if (pagesItems.length > 0) {
+                                    pagesItems.sort((a, b) => a.index - b.index);
+                                    finalData = pagesItems.map(p => p.content);
+                                    break;
+                                }
+                            }
+                        } catch (err) {
+                            console.warn(`Subcollection check on ${coll}/${reportId}/pages:`, err);
+                        }
+                    }
+                }
 
-                showToast('☁️ Loaded from Cloud! Rebuilding...', 'success');
-                setTimeout(() => {
-                    window.removeEventListener('beforeunload', _beforeUnloadSave);
-                    location.reload();
-                }, 1000);
+                // Check 3: If still not found, fetch main document directly
+                if ((!finalData || finalData.length === 0) && window.firebaseDB && window.firebaseGetDoc) {
+                    const collectionsToTry = [targetColl, 'reports', 'monthly_reports'];
+                    for (const coll of collectionsToTry) {
+                        try {
+                            const docRef = window.firebaseDoc(window.firebaseDB, coll, reportId);
+                            const docSnap = await window.firebaseGetDoc(docRef);
+                            if (docSnap && docSnap.exists()) {
+                                const data = docSnap.data();
+                                if (data && data.pages && Array.isArray(data.pages) && data.pages.length > 0) {
+                                    finalData = data.pages.map(parsePagePayload).filter(Boolean);
+                                    break;
+                                }
+                            }
+                        } catch (err) {
+                            console.warn(`Doc check on ${coll}/${reportId}:`, err);
+                        }
+                    }
+                }
+
+                if (finalData && Array.isArray(finalData) && finalData.length > 0) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
+                    showToast('☁️ Loaded from Cloud! Rebuilding...', 'success');
+                    setTimeout(() => {
+                        window.removeEventListener('beforeunload', _beforeUnloadSave);
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showToast('Backup is empty or format mismatch!', 'warn');
+                }
             } catch (error) {
                 console.error("Firestore Load Error:", error);
                 showToast('Cloud Load Failed! See console.', 'error');
             }
         }
 
-        async function deleteFromFirestore(reportId, itemElement) {
+        async function deleteFromFirestore(reportId, collectionName, itemElement) {
             if (!confirm('क्या आप सच में इस बैकअप को डिलीट करना चाहते हैं?')) return;
             try {
                 showToast('Deleting backup...', 'info');
-                const pagesRef = window.firebaseCollection(window.firebaseDB, `reports/${reportId}/pages`);
-                const snapshot = await window.firebaseGetDocs(pagesRef);
-                const docs = snapshot.docs;
-                for (const d of docs) {
-                    await window.firebaseDeleteDoc(d.ref);
+                const targetColl = collectionName || 'reports';
+                
+                // Delete subcollection documents if any
+                try {
+                    const pagesRef = window.firebaseCollection(window.firebaseDB, `${targetColl}/${reportId}/pages`);
+                    const snapshot = await window.firebaseGetDocs(pagesRef);
+                    if (snapshot && !snapshot.empty) {
+                        for (const d of snapshot.docs) {
+                            await window.firebaseDeleteDoc(d.ref);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Error deleting subcollection:", e);
                 }
-                const reportRef = window.firebaseDoc(window.firebaseDB, 'reports', reportId);
+
+                // Delete parent document
+                const reportRef = window.firebaseDoc(window.firebaseDB, targetColl, reportId);
                 await window.firebaseDeleteDoc(reportRef);
 
                 showToast('बैकअप डिलीट हो गया!', 'success');
