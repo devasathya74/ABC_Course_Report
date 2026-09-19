@@ -1039,7 +1039,7 @@
 
         @media print {
             @page {
-                size: 280 landscape;
+                size: 356mm 280mm;
                 margin: 0;
             }
 
@@ -1559,13 +1559,11 @@
             <div class="report-inner">
                 <!-- Slanted Header Theme exactly replicating user images -->
                 <div class="header-top">
-                    <img src="https://docs.google.com/uc?export=download&id=1DqnhcJQR5Ibm4CFtleaHm9QsKmfTBZ9J"
-                        alt="PAC Logo" class="logo-left" onerror="this.onerror=null; this.src='logo1.png'">
+                    <img src="logo1.png" alt="PAC Logo" class="logo-left" onerror="this.onerror=null; this.src='https://docs.google.com/uc?export=download&id=1DqnhcJQR5Ibm4CFtleaHm9QsKmfTBZ9J'">
 
                     <span contenteditable="true" data-save-id="header-title">25वीं वाहिनी पीएसी, रायबरेली</span>
 
-                    <img src="https://docs.google.com/uc?export=download&id=1xIE71zj4PL7voFfQl6oezri0eKXjNX9j"
-                        alt="UP Police Logo" class="logo-right" onerror="this.onerror=null; this.src='logo2.png'">
+                    <img src="logo2.png" alt="UP Police Logo" class="logo-right" onerror="this.onerror=null; this.src='https://docs.google.com/uc?export=download&id=1xIE71zj4PL7voFfQl6oezri0eKXjNX9j'">
                 </div>
 
                 <div class="header-sub" contenteditable="true" data-save-id="header-sub" id="report-date-header">ए/बी/सी
@@ -1752,7 +1750,7 @@
                 <div class="scale-control-container">
                     <span>🔍</span>
                     <button class="scale-btn" id="btn-scale-down">-</button>
-                    <span id="scale-indicator">100 </span>
+                    <span id="scale-indicator">70%</span>
                     <button class="scale-btn" id="btn-scale-up">+</button>
                 </div>
             </div>
@@ -2228,25 +2226,31 @@
         /* ============================================================
            OFFLINE JSON BACKUP & RESTORE ENGINE
         ============================================================ */
-        function exportJSONBackup() {
-            saveAllData(true);
-            const rawData = localStorage.getItem(STORAGE_KEY);
-            if (!rawData) {
-                showToast('⚠️ बैकअप के लिए कोई डेटा नहीं है', 'warn');
-                return;
+        async function exportJSONBackup() {
+            try {
+                showToast('⏳ बैकअप तैयार हो रहा है...', 'info', 1500);
+                await saveAllData(true);
+                const rawData = localStorage.getItem(STORAGE_KEY);
+                if (!rawData) {
+                    showToast('⚠️ बैकअप के लिए कोई डेटा नहीं है', 'warn');
+                    return;
+                }
+                const blob = new Blob([rawData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2, '0');
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const yyyy = now.getFullYear();
+                a.href = url;
+                a.download = `ABC_Course_Report_Backup_${dd}-${mm}-${yyyy}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('💾 ऑफ़लाइन JSON बैकअप डाउनलोड हुआ!', 'success', 4000);
+            } catch (err) {
+                console.error("Export Error:", err);
+                showToast('❌ JSON बैकअप निर्यात में त्रुटि!', 'error');
             }
-            const blob = new Blob([rawData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const now = new Date();
-            const dd = String(now.getDate()).padStart(2, '0');
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const yyyy = now.getFullYear();
-            a.href = url;
-            a.download = `ABC_Course_Report_Backup_${dd}-${mm}-${yyyy}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('💾 ऑफ़लाइन JSON बैकअप डाउनलोड हुआ!', 'success', 4000);
         }
 
         function importJSONBackup(file) {
@@ -2254,15 +2258,27 @@
             const reader = new FileReader();
             reader.onload = function (e) {
                 try {
-                    const data = JSON.parse(e.target.result);
-                    if (!Array.isArray(data)) {
+                    let data = JSON.parse(e.target.result);
+                    if (data && typeof data === 'object' && !Array.isArray(data)) {
+                        if (Array.isArray(data.pages)) data = data.pages;
+                        else if (Array.isArray(data.pagesData)) data = data.pagesData;
+                        else if (Array.isArray(data.data)) data = data.data;
+                        else if (Array.isArray(data.reportData)) data = data.reportData;
+                        else if (data.pages && typeof data.pages === 'object') data = Object.values(data.pages);
+                        else data = Object.values(data);
+                    }
+                    if (!Array.isArray(data) || data.length === 0) {
                         showToast('❌ अमान्य बैकअप फ़ाइल!', 'error', 4000);
                         return;
                     }
                     snapshotState();
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                    restoreState(data);
-                    showToast('📂 JSON बैकअप सफलतापूर्वक रीस्टोर हुआ!', 'success', 4000);
+                    const success = restoreState(data);
+                    if (success) {
+                        showToast(`📂 JSON बैकअप सफलतापूर्वक रीस्टोर हुआ (${data.length} पेज)!`, 'success', 4000);
+                    } else {
+                        showToast('⚠️ बैकअप लोड करने में समस्या आई', 'warn', 4000);
+                    }
                 } catch (err) {
                     console.error('JSON Import Error:', err);
                     showToast('❌ JSON फ़ाइल पढ़ने में त्रुटि!', 'error', 4000);
@@ -2582,25 +2598,36 @@
         /* ============================================================
            AUTOSAVE SYSTEMS
         ============================================================ */
+        let _isCloudRestoring = false;
+
         function triggerAutoSave() {
+            if (_isCloudRestoring) return;
             clearTimeout(saveTimer);
-            saveTimer = setTimeout(() => saveAllData(true), 1500);
+            saveTimer = setTimeout(() => {
+                if (!_isCloudRestoring) saveAllData(true);
+            }, 1500);
         }
 
         // Periodic forced save every 15s (silent)
-        setInterval(() => saveAllData(true), 15000);
+        setInterval(() => {
+            if (!_isCloudRestoring) saveAllData(true);
+        }, 15000);
 
         // Save before tab closes
-        const _beforeUnloadSave = () => saveAllData(true);
+        const _beforeUnloadSave = () => {
+            if (!_isCloudRestoring) saveAllData(true);
+        };
         window.addEventListener('beforeunload', _beforeUnloadSave);
 
         // Save on any editable content changes
         document.addEventListener('input', (e) => {
+            if (_isCloudRestoring) return;
             if (e.target.getAttribute('contenteditable') === 'true') triggerAutoSave();
         });
 
         // Snapshot state for undo action when starting to edit
         document.addEventListener('focusin', (e) => {
+            if (_isCloudRestoring) return;
             if (e.target.getAttribute('contenteditable') === 'true') {
                 snapshotState();
             }
@@ -2630,13 +2657,20 @@
         let _saveRetrying = false;
 
         async function saveAllData(silent = false) {
+            if (_isCloudRestoring) return;
             try {
                 const pagesData = [];
 
                 for (const page of wrapper.querySelectorAll('.a4-page')) {
-                    // Report Page Serializer mapping save-ids exactly
+                    // Report Page Serializer mapping save-ids and dynamic table rows
                     if (page.querySelector('.report-inner')) {
-                        const rd = { type: 'report', contents: {} };
+                        const reportInner = page.querySelector('.report-inner');
+                        const tbody = reportInner.querySelector('table tbody');
+                        const rd = {
+                            type: 'report',
+                            contents: {},
+                            tableBodyHtml: tbody ? tbody.innerHTML : ''
+                        };
                         page.querySelectorAll('[data-save-id]').forEach(el => {
                             rd.contents[el.getAttribute('data-save-id')] = el.innerHTML;
                         });
@@ -2653,22 +2687,25 @@
                     for (const box of canvas.querySelectorAll('.resizable-box')) {
                         const img = box.querySelector('img');
                         const hasImage = img && img.style.display !== 'none' && img.src &&
-                            img.src !== window.location.href;
+                            img.src !== window.location.href &&
+                            img.src !== 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=' &&
+                            (img.src.startsWith('data:image') ? img.src.length > 30 : img.src.length > 5);
 
-                        if (!hasImage) continue;
-
-                        const compressed = await compressImageForStorage(img.src);
+                        let compressed = '';
+                        if (hasImage) {
+                            compressed = await compressImageForStorage(img.src);
+                        }
 
                         pd.boxes.push({
                             left: box.style.left, top: box.style.top,
                             width: box.style.width, height: box.style.height,
                             imgSrc: compressed,
-                            imgDisplay: 'block',
-                            imgX: img.dataset.x || '0',
-                            imgY: img.dataset.y || '0',
-                            imgScale: img.dataset.scale || '1',
-                            imgRotation: img.dataset.rotation || '0',
-                            imgTransform: img.style.transform || ''
+                            imgDisplay: hasImage ? 'block' : 'none',
+                            imgX: img ? (img.dataset.x || '0') : '0',
+                            imgY: img ? (img.dataset.y || '0') : '0',
+                            imgScale: img ? (img.dataset.scale || '1') : '1',
+                            imgRotation: img ? (img.dataset.rotation || '0') : '0',
+                            imgTransform: img ? (img.style.transform || '') : ''
                         });
                     }
                     pagesData.push(pd);
@@ -2739,7 +2776,13 @@
             const pagesData = [];
             for (const page of wrapper.querySelectorAll('.a4-page')) {
                 if (page.querySelector('.report-inner')) {
-                    const rd = { type: 'report', contents: {} };
+                    const reportInner = page.querySelector('.report-inner');
+                    const tbody = reportInner.querySelector('table tbody');
+                    const rd = {
+                        type: 'report',
+                        contents: {},
+                        tableBodyHtml: tbody ? tbody.innerHTML : ''
+                    };
                     page.querySelectorAll('[data-save-id]').forEach(el => {
                         rd.contents[el.getAttribute('data-save-id')] = el.innerHTML;
                     });
@@ -2754,13 +2797,13 @@
                     pd.boxes.push({
                         left: box.style.left, top: box.style.top,
                         width: box.style.width, height: box.style.height,
-                        imgSrc: getUndoImageId(img.src),
-                        imgDisplay: img.style.display,
-                        imgX: img.dataset.x || '0',
-                        imgY: img.dataset.y || '0',
-                        imgScale: img.dataset.scale || '1',
-                        imgRotation: img.dataset.rotation || '0',
-                        imgTransform: img.style.transform || ''
+                        imgSrc: getUndoImageId(img ? img.src : ''),
+                        imgDisplay: img ? img.style.display : 'none',
+                        imgX: img ? (img.dataset.x || '0') : '0',
+                        imgY: img ? (img.dataset.y || '0') : '0',
+                        imgScale: img ? (img.dataset.scale || '1') : '1',
+                        imgRotation: img ? (img.dataset.rotation || '0') : '0',
+                        imgTransform: img ? (img.style.transform || '') : ''
                     });
                 }
                 pagesData.push(pd);
@@ -2769,15 +2812,71 @@
         }
 
         function restoreState(pagesData) {
-            if (!pagesData || pagesData.length === 0) return false;
-            wrapper.querySelectorAll('.a4-page:not(#report-page)').forEach(p => p.remove());
-            
-            const firstData = pagesData[0];
-            if (firstData && (firstData.type === 'report' || firstData.contents)) {
-                const reportInner = document.getElementById('report-page').querySelector('.report-inner');
-                const contents = firstData.contents || firstData;
+            if (!pagesData) return false;
+            let list = pagesData;
+            if (typeof list === 'string') {
+                try { list = JSON.parse(list); } catch(e) { return false; }
+            }
+            // Handle wrapper objects like { pages: [...] } or { totalPages: 4, pages: [...] }
+            if (list && typeof list === 'object' && !Array.isArray(list)) {
+                if (Array.isArray(list.pages)) list = list.pages;
+                else if (Array.isArray(list.pagesData)) list = list.pagesData;
+                else if (Array.isArray(list.data)) list = list.data;
+                else if (Array.isArray(list.reportData)) list = list.reportData;
+                else if (list.pages && typeof list.pages === 'object') list = Object.values(list.pages);
+                else if (list.data && typeof list.data === 'object') list = Object.values(list.data);
+                else {
+                    const keys = Object.keys(list).sort((a, b) => {
+                        const numA = parseInt(a.replace(/\D/g, '')) || 0;
+                        const numB = parseInt(b.replace(/\D/g, '')) || 0;
+                        return numA - numB;
+                    });
+                    list = keys.map(k => list[k]);
+                }
+            }
+            if (!Array.isArray(list) || list.length === 0) return false;
 
-                if (contents && typeof contents === 'object') {
+            // Separate Report Page and Photo Pages
+            let reportData = null;
+            const photoPagesData = [];
+
+            list.forEach((item, index) => {
+                if (!item) return;
+                let pageObj = item;
+                if (pageObj.data !== undefined && typeof pageObj.data === 'object' && pageObj.data !== null) {
+                    pageObj = pageObj.data;
+                } else if (typeof pageObj.data === 'string') {
+                    try { pageObj = JSON.parse(pageObj.data); } catch(_) {}
+                }
+                if (typeof pageObj === 'string') {
+                    try { pageObj = JSON.parse(pageObj); } catch(_) {}
+                }
+                if (!pageObj || typeof pageObj !== 'object') return;
+
+                const isReport = pageObj.type === 'report' || 
+                                 !!pageObj.contents || 
+                                 !!pageObj.tableBodyHtml || 
+                                 (index === 0 && !pageObj.boxes && !pageObj.images && !pageObj.canvasId && pageObj.type !== 'photo');
+
+                if (isReport && !reportData) {
+                    reportData = pageObj;
+                } else {
+                    photoPagesData.push(pageObj);
+                }
+            });
+
+            // 1. Restore Report Page
+            if (reportData) {
+                const reportPage = document.getElementById('report-page');
+                const reportInner = reportPage ? reportPage.querySelector('.report-inner') : null;
+                const tbody = reportInner ? reportInner.querySelector('table tbody') : null;
+
+                if (reportData.tableBodyHtml && tbody) {
+                    tbody.innerHTML = reportData.tableBodyHtml;
+                }
+
+                const contents = reportData.contents || reportData;
+                if (contents && typeof contents === 'object' && reportInner) {
                     Object.keys(contents).forEach((key) => {
                         const targetEl = reportInner.querySelector(`[data-save-id="${key}"]`);
                         if (targetEl && typeof contents[key] === 'string') {
@@ -2785,31 +2884,40 @@
                         }
                     });
                 }
-
-                if (!reportInner.querySelector('table')) {
-                    localStorage.removeItem(STORAGE_KEY);
-                    location.reload();
-                    return false;
-                }
             }
 
-            const startIndex = (firstData && (firstData.type === 'report' || firstData.contents)) ? 1 : 0;
-            for (let i = startIndex; i < pagesData.length; i++) {
-                const pd = pagesData[i];
-                if (!pd) continue;
-                if (pd.type === 'report') continue;
+            // 2. Remove all existing photo pages
+            wrapper.querySelectorAll('.a4-page:not(#report-page)').forEach(p => p.remove());
 
-                const { pageEl, canvasId } = createPhotoPageElement(pd.canvasId, false);
+            // 3. Restore each Photo Page
+            photoPagesData.forEach((pd, i) => {
+                if (!pd) return;
+                const targetCanvasId = pd.canvasId || ('canvas-' + Date.now() + '-' + (i + 1) + '-' + Math.floor(Math.random() * 9999));
+                const { pageEl, canvasId } = createPhotoPageElement(targetCanvasId, false);
                 wrapper.appendChild(pageEl);
 
-                const boxes = pd.boxes || pd.images || [];
-                boxes.forEach(bd => {
-                    const src = bd.imgSrc || bd.src || '';
-                    bd.imgSrc = resolveUndoImageId(src);
-                    addBoxWithData(canvasId, bd);
-                });
-            }
+                let boxes = pd.boxes || pd.images || pd.elements || [];
+                if (boxes && typeof boxes === 'object' && !Array.isArray(boxes)) {
+                    boxes = Object.values(boxes);
+                }
+
+                if (Array.isArray(boxes) && boxes.length > 0) {
+                    boxes.forEach(bd => {
+                        if (!bd) return;
+                        const src = bd.imgSrc || bd.src || bd.url || '';
+                        bd.imgSrc = resolveUndoImageId(src);
+                        addBoxWithData(canvasId, bd);
+                    });
+                } else {
+                    // Populate default 6 boxes if photo page was saved empty
+                    populate6GridBoxes(canvasId);
+                }
+            });
+
+            selectBox(null);
             updatePageCounter();
+            const firstPage = wrapper.querySelector('.a4-page');
+            if (firstPage) selectPage(firstPage);
             return true;
         }
 
@@ -2818,7 +2926,12 @@
             const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'default';
             setTheme(savedTheme);
 
-            const raw = localStorage.getItem(STORAGE_KEY);
+            const storageKeys = [STORAGE_KEY, 'pac_report_v4_premium', 'pac_report_v3', 'pac_report_v2', 'pac_report_data', 'pac_report'];
+            let raw = null;
+            for (const k of storageKeys) {
+                raw = localStorage.getItem(k);
+                if (raw) break;
+            }
             if (!raw) return false;
             try {
                 const pagesData = JSON.parse(raw);
@@ -3323,6 +3436,14 @@
             });
         }
 
+        function formatUnit(val, defaultVal) {
+            if (val === undefined || val === null || val === '') return defaultVal;
+            if (typeof val === 'number') return val + 'px';
+            const s = String(val).trim();
+            if (/^-?\d+(\.\d+)?$/.test(s)) return s + 'px';
+            return s;
+        }
+
         function addBoxWithData(canvasId, data) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
@@ -3330,20 +3451,20 @@
             const box = document.createElement('div');
             box.className = 'resizable-box';
             box.style.cssText = [
-                `left:${data.left || '60px'}`,
-                `top:${data.top || '60px'}`,
-                `width:${data.width || '250px'}`,
-                `height:${data.height || '180px'}`
+                `left:${formatUnit(data.left, '60px')}`,
+                `top:${formatUnit(data.top, '60px')}`,
+                `width:${formatUnit(data.width, '250px')}`,
+                `height:${formatUnit(data.height, '180px')}`
             ].join(';');
             box.tabIndex = 0;
 
             const inputId = 'file-' + Math.random().toString(36).substr(2, 9);
-            const imgSrc = data.imgSrc || data.src || '';
+            const imgSrc = data.imgSrc || data.src || data.url || '';
             const hasImg = !!imgSrc &&
                            imgSrc !== window.location.href &&
                            imgSrc !== 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=' &&
-                           imgSrc.length > 25 &&
-                           data.imgDisplay !== 'none';
+                           data.imgDisplay !== 'none' &&
+                           (imgSrc.startsWith('data:image') ? imgSrc.length > 30 : imgSrc.length > 5);
 
             const lblStyle = hasImg ? 'display:none' : '';
             const imgStyle = hasImg ? 'display:block' : 'display:none';
@@ -3609,113 +3730,84 @@
             }
         }
 
-        /* ============================================================
-           DRAG & RESIZE ENGINE
-        ============================================================ */
         function makeDraggable(el) {
-            let pressTimer = null;
             let isDragging = false;
             let hasMoved = false;
-            let lastPointer = { x: 0, y: 0 };
             let startX = 0, startY = 0;
             let initialLeft = 0, initialTop = 0;
-            const PRESS_DURATION = 500;
 
             function handleStart(e) {
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
 
-                const targetCls = e.target.classList;
-                if (e.target.closest('.upload-label') || targetCls.contains('resizer') ||
-                    targetCls.contains('manual-move-btn') || targetCls.contains('delete-btn') ||
-                    targetCls.contains('rotate-btn')) return;
-
-                if (e.type === "touchstart") {
-                    e.preventDefault();
-                }
-
-                lastPointer.x = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-                lastPointer.y = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
-                isDragging = false;
-                hasMoved = false;
-
-                if (e.pointerType === 'mouse') {
-                    isDragging = true;
-                    selectBox(el);
-                    startX = lastPointer.x;
-                    startY = lastPointer.y;
-                    initialLeft = parseFloat(el.style.left) || 0;
-                    initialTop = parseFloat(el.style.top) || 0;
-                } else {
-                    pressTimer = setTimeout(() => {
-                        isDragging = true;
-                        selectBox(el);
-                        snapshotState();
-
-                        const p = lastPointer;
-                        startX = p.x;
-                        startY = p.y;
-
-                        initialLeft = parseFloat(el.style.left) || 0;
-                        initialTop = parseFloat(el.style.top) || 0;
-
-                        el.style.transition = "none";
-                        el.style.opacity = "0.85";
-                        document.body.style.overflow = "hidden";
-
-                        if (navigator.vibrate) navigator.vibrate(40);
-                    }, PRESS_DURATION);
-                }
-
-                document.addEventListener("pointermove", handleMove, { passive: false });
-                document.addEventListener("pointerup", handleEnd);
-                document.addEventListener("pointercancel", handleEnd);
-            }
-
-            function handleMove(e) {
-                const cx = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-                const cy = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
-
-                lastPointer.x = cx;
-                lastPointer.y = cy;
-
-                if (!isDragging) {
-                    clearTimeout(pressTimer);
+                const target = e.target;
+                if (target.closest('.upload-label') ||
+                    target.closest('.resizer') ||
+                    target.closest('.manual-move-btn') ||
+                    target.closest('.delete-btn') ||
+                    target.closest('.rotate-btn') ||
+                    target.closest('.fit-btn')) {
                     return;
                 }
 
-                if (e.cancelable) e.preventDefault();
+                const isHandle = !!target.closest('.move-handle');
 
-                if (!hasMoved) {
-                    if (e.pointerType === 'mouse') snapshotState();
-                    hasMoved = true;
+                selectBox(el);
+                isDragging = true;
+                hasMoved = false;
+
+                const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+
+                startX = clientX;
+                startY = clientY;
+                initialLeft = parseFloat(el.style.left) || 0;
+                initialTop = parseFloat(el.style.top) || 0;
+
+                if (isHandle) {
+                    vibrate(15);
                 }
 
-                const dx = (cx - startX) / currentScale;
-                const dy = (cy - startY) / currentScale;
+                function onPointerMove(ev) {
+                    if (!isDragging) return;
+                    if (ev.cancelable) ev.preventDefault();
 
-                el.style.left = (initialLeft + dx) + "px";
-                el.style.top = (initialTop + dy) + "px";
-            }
+                    const cx = ev.clientX ?? (ev.touches && ev.touches[0] ? ev.touches[0].clientX : 0);
+                    const cy = ev.clientY ?? (ev.touches && ev.touches[0] ? ev.touches[0].clientY : 0);
 
-            function handleEnd(e) {
-                clearTimeout(pressTimer);
-                document.removeEventListener("pointermove", handleMove);
-                document.removeEventListener("pointerup", handleEnd);
-                document.removeEventListener("pointercancel", handleEnd);
+                    if (!hasMoved) {
+                        snapshotState();
+                        hasMoved = true;
+                    }
 
-                el.style.opacity = "";
-                el.style.transition = "";
-                document.body.style.overflow = "";
+                    const scale = currentScale || 1;
+                    const dx = (cx - startX) / scale;
+                    const dy = (cy - startY) / scale;
 
-                if (hasMoved) {
-                    triggerAutoSave();
-                } else if (!isDragging) {
-                    selectBox(el);
+                    el.style.left = (initialLeft + dx) + "px";
+                    el.style.top = (initialTop + dy) + "px";
                 }
+
+                function onPointerUp() {
+                    isDragging = false;
+                    document.removeEventListener("pointermove", onPointerMove);
+                    document.removeEventListener("pointerup", onPointerUp);
+                    document.removeEventListener("pointercancel", onPointerUp);
+                    document.removeEventListener("touchmove", onPointerMove);
+                    document.removeEventListener("touchend", onPointerUp);
+
+                    if (hasMoved) {
+                        triggerAutoSave();
+                    }
+                }
+
+                document.addEventListener("pointermove", onPointerMove, { passive: false });
+                document.addEventListener("pointerup", onPointerUp);
+                document.addEventListener("pointercancel", onPointerUp);
+                document.addEventListener("touchmove", onPointerMove, { passive: false });
+                document.addEventListener("touchend", onPointerUp);
             }
 
-            el.addEventListener("pointerdown", handleStart, { passive: false });
-            el.addEventListener("touchstart", handleStart, { passive: false });
+            el.addEventListener("pointerdown", handleStart);
         }
 
         function makeResizable(el) {
@@ -3724,8 +3816,8 @@
                     e.preventDefault();
                     e.stopPropagation();
 
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                    const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
 
                     const startW = el.offsetWidth, startH = el.offsetHeight;
                     const startX = clientX, startY = clientY;
@@ -3739,14 +3831,16 @@
                     const isE = cls.contains('r') || cls.contains('tr') || cls.contains('br');
 
                     function onMove(ev) {
+                        if (ev.cancelable) ev.preventDefault();
                         if (!hasMoved) {
                             snapshotState();
                             hasMoved = true;
                         }
-                        const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
-                        const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
-                        const dx = cx - startX;
-                        const dy = cy - startY;
+                        const cx = ev.clientX ?? (ev.touches && ev.touches[0] ? ev.touches[0].clientX : 0);
+                        const cy = ev.clientY ?? (ev.touches && ev.touches[0] ? ev.touches[0].clientY : 0);
+                        const scale = currentScale || 1;
+                        const dx = (cx - startX) / scale;
+                        const dy = (cy - startY) / scale;
 
                         if (isE) {
                             el.style.width = Math.max(MIN_BOX_W, startW + dx) + 'px';
@@ -3765,7 +3859,11 @@
                             el.style.top = (startT + startH - newH) + 'px';
                         }
                     }
+
                     function onUp() {
+                        document.removeEventListener('pointermove', onMove);
+                        document.removeEventListener('pointerup', onUp);
+                        document.removeEventListener('pointercancel', onUp);
                         document.removeEventListener('mousemove', onMove);
                         document.removeEventListener('mouseup', onUp);
                         document.removeEventListener('touchmove', onMove);
@@ -3773,12 +3871,16 @@
                         if (hasMoved) triggerAutoSave();
                     }
 
+                    document.addEventListener('pointermove', onMove, { passive: false });
+                    document.addEventListener('pointerup', onUp);
+                    document.addEventListener('pointercancel', onUp);
                     document.addEventListener('mousemove', onMove);
                     document.addEventListener('mouseup', onUp);
                     document.addEventListener('touchmove', onMove, { passive: false });
                     document.addEventListener('touchend', onUp);
                 }
 
+                resizer.addEventListener('pointerdown', handleStart);
                 resizer.addEventListener('mousedown', handleStart);
                 resizer.addEventListener('touchstart', handleStart, { passive: false });
             });
@@ -3794,7 +3896,7 @@
         /* ============================================================
            DATE INJECTION UTILITY
         ============================================================ */
-        function injectCurrentDate() {
+        function injectCurrentDate(onlyIfPlaceholder = false) {
             const now = new Date();
             const dd = String(now.getDate()).padStart(2, '0');
             const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -3810,19 +3912,15 @@
 
             const headerSub = document.getElementById('report-date-header');
             if (headerSub) {
-                if (headerSub.innerHTML.includes('लोड हो रहा है')) {
+                if (headerSub.innerHTML.includes('लोड हो रहा है') || !onlyIfPlaceholder) {
                     headerSub.innerHTML = `ए/बी/सी कोर्स की रिपोर्ट, दिनाँक:- ${slashDate} (${dayName})`;
-                } else {
-                    headerSub.innerHTML = headerSub.innerHTML.replace(/\d{2}\/\d{2}\/\d{4}(?:\s*\([^)]+\))?/, `${slashDate} (${dayName})`);
                 }
             }
 
             const introEl = document.getElementById('report-intro');
             if (introEl) {
-                if (introEl.innerHTML.includes('आज दिनाँक — को')) {
+                if (introEl.innerHTML.includes('आज दिनाँक — को') || !onlyIfPlaceholder) {
                     introEl.innerHTML = `महोदय,<br>\n आज दिनाँक ${dashDate} को समस्त दलनायकों एवं प्रभारी दलनायकों के नेतृत्व में समस्त दलों को निम्नलिखित व्यवस्थापन पर उपस्थित सभी अधिकारी/कर्मचारी द्वारा ए/बी/सी कोर्स के अंतर्गत कोर्स/पाठ्यक्रम पढ़ाया गया।`;
-                } else {
-                    introEl.innerHTML = introEl.innerHTML.replace(/\d{2}-\d{2}-\d{4}/, dashDate);
                 }
             }
         }
@@ -3903,7 +4001,7 @@
             if (firstPage) selectPage(firstPage);
             updatePageCounter();
 
-            injectCurrentDate();
+            injectCurrentDate(loaded);
 
             snapshotState();
         });
@@ -3928,11 +4026,25 @@
                     return;
                 }
                 const pagesData = JSON.parse(rawData);
+                if (!Array.isArray(pagesData) || pagesData.length === 0) {
+                    showToast('No data to backup!', 'warn');
+                    return;
+                }
 
                 const timestamp = Date.now();
                 const reportId = 'report_' + timestamp;
 
-                // 1. Save main document with metadata to 'reports'
+                // 1. Save each page individually into subcollection `reports/${reportId}/pages/page_${i}`
+                // This ensures large reports with multiple photo pages never exceed Firestore 1MB doc limit
+                for (let i = 0; i < pagesData.length; i++) {
+                    const pageRef = window.firebaseDoc(window.firebaseDB, `reports/${reportId}/pages`, `page_${i}`);
+                    await window.firebaseSetDoc(pageRef, {
+                        pageIndex: i,
+                        data: pagesData[i]
+                    });
+                }
+
+                // 2. Save main document with metadata to 'reports'
                 const reportRef = window.firebaseDoc(window.firebaseDB, 'reports', reportId);
                 try {
                     await window.firebaseSetDoc(reportRef, {
@@ -3947,15 +4059,6 @@
                         updatedAt: timestamp,
                         dateString: new Date().toLocaleString('en-IN'),
                         totalPages: pagesData.length
-                    });
-                }
-
-                // 2. Also save each page in subcollection for backward compatibility & safety
-                for (let i = 0; i < pagesData.length; i++) {
-                    const pageRef = window.firebaseDoc(window.firebaseDB, `reports/${reportId}/pages`, `page_${i}`);
-                    await window.firebaseSetDoc(pageRef, {
-                        pageIndex: i,
-                        data: pagesData[i]
                     });
                 }
 
@@ -4031,7 +4134,12 @@
                     const data = itemInfo.data;
                     const ts = data.updatedAt || parseInt(itemInfo.id.replace(/\D/g, '')) || null;
                     const dateStr = data.dateString || (ts ? new Date(ts).toLocaleString('en-IN') : itemInfo.id);
-                    const pageCount = data.totalPages || (data.pages && Array.isArray(data.pages) ? data.pages.length : '?');
+                    let pageCount = data.totalPages;
+                    if (!pageCount) {
+                        if (data.pages && Array.isArray(data.pages)) pageCount = data.pages.length;
+                        else if (data.pages && typeof data.pages === 'object') pageCount = Object.keys(data.pages).length;
+                        else pageCount = '?';
+                    }
 
                     const item = document.createElement('div');
                     item.className = 'cloud-backup-item';
@@ -4045,10 +4153,17 @@
                             <button class="cloud-backup-action btn-delete" style="background:#ef4444;">Delete</button>
                         </div>
                     `;
-                    item.addEventListener('click', () => {
+
+                    const loadAction = async (e) => {
+                        if (e) e.stopPropagation();
                         modal.classList.remove('active');
-                        loadFromFirestore(itemInfo.id, itemInfo.collection, data);
-                    });
+                        await loadFromFirestore(itemInfo.id, itemInfo.collection, data);
+                    };
+
+                    item.addEventListener('click', loadAction);
+
+                    const loadBtn = item.querySelector('.btn-load');
+                    if (loadBtn) loadBtn.addEventListener('click', loadAction);
                     
                     const deleteBtn = item.querySelector('.btn-delete');
                     deleteBtn.addEventListener('click', (e) => {
@@ -4069,7 +4184,10 @@
 
         async function loadFromFirestore(reportId, collectionName, cachedData) {
             try {
-                showToast('Downloading from Cloud...', 'info', 2000);
+                showToast('☁️ Downloading from Cloud...', 'info', 3000);
+                _isCloudRestoring = true;
+                clearTimeout(saveTimer);
+
                 let finalData = null;
                 const targetColl = collectionName || 'reports';
 
@@ -4077,39 +4195,72 @@
                 function parsePagePayload(raw) {
                     if (!raw) return null;
                     let obj = raw;
-                    if (obj.data !== undefined) {
+                    if (obj.data !== undefined && typeof obj.data === 'object' && obj.data !== null) {
                         obj = obj.data;
+                    } else if (typeof obj.data === 'string') {
+                        try {
+                            const parsed = JSON.parse(obj.data);
+                            if (parsed && typeof parsed === 'object') obj = parsed;
+                        } catch (_) {}
                     }
                     if (typeof obj === 'string') {
                         try {
                             obj = JSON.parse(obj);
                         } catch (e) {
-                            // Leave as is if not json
+                            return null;
                         }
                     }
-                    if (typeof obj === 'object' && obj !== null) {
-                        if (obj.data !== undefined && typeof obj.data === 'object') {
-                            obj = obj.data;
-                        }
-                        if (!obj.type) {
-                            if (obj.boxes || obj.images || obj.canvasId) {
-                                obj.type = 'photo';
-                            } else if (obj.contents || obj.table) {
-                                obj.type = 'report';
-                            }
-                        }
-                        return obj;
+                    if (typeof obj !== 'object' || obj === null) return null;
+
+                    // Unpack nested payload if present
+                    if (obj.data !== undefined && typeof obj.data === 'object' && obj.data !== null) {
+                        obj = obj.data;
                     }
-                    return null;
+
+                    if (!obj.type) {
+                        if (obj.boxes || obj.images || obj.canvasId || obj.elements) {
+                            obj.type = 'photo';
+                        } else if (obj.contents || obj.table || obj.tableBodyHtml) {
+                            obj.type = 'report';
+                        }
+                    }
+                    // Normalize boxes if object
+                    if (obj.boxes && typeof obj.boxes === 'object' && !Array.isArray(obj.boxes)) {
+                        obj.boxes = Object.values(obj.boxes);
+                    }
+                    if (obj.images && typeof obj.images === 'object' && !Array.isArray(obj.images)) {
+                        obj.images = Object.values(obj.images);
+                    }
+                    return obj;
                 }
 
-                // Check 1: cachedData with pages array
-                if (cachedData && cachedData.pages && Array.isArray(cachedData.pages) && cachedData.pages.length > 0) {
-                    finalData = cachedData.pages.map(parsePagePayload).filter(Boolean);
+                function unpackPagesArray(rawArray) {
+                    if (!rawArray) return [];
+                    let list = rawArray;
+                    if (typeof list === 'string') {
+                        try { list = JSON.parse(list); } catch (e) { list = []; }
+                    }
+                    if (typeof list === 'object' && !Array.isArray(list)) {
+                        if (Array.isArray(list.pages)) list = list.pages;
+                        else if (Array.isArray(list.pagesData)) list = list.pagesData;
+                        else if (Array.isArray(list.data)) list = list.data;
+                        else {
+                            const keys = Object.keys(list).sort((a, b) => {
+                                const numA = parseInt(a.replace(/\D/g, '')) || 0;
+                                const numB = parseInt(b.replace(/\D/g, '')) || 0;
+                                return numA - numB;
+                            });
+                            list = keys.map(k => list[k]);
+                        }
+                    }
+                    if (Array.isArray(list)) {
+                        return list.map(parsePagePayload).filter(Boolean);
+                    }
+                    return [];
                 }
 
-                // Check 2: Fetch subcollection (where Firestore stores page_0, page_1, page_2, page_3...)
-                if ((!finalData || finalData.length === 0) && window.firebaseDB && window.firebaseCollection && window.firebaseGetDocs) {
+                // Check 1: Fetch subcollection (where each page is stored individually, safely handling large files)
+                if (window.firebaseDB && window.firebaseCollection && window.firebaseGetDocs) {
                     const collectionsToTry = [targetColl, 'reports', 'monthly_reports'];
                     for (const coll of collectionsToTry) {
                         try {
@@ -4117,10 +4268,21 @@
                             const snapshot = await window.firebaseGetDocs(pagesRef);
                             if (snapshot && !snapshot.empty) {
                                 let pagesItems = [];
+                                let fallbackIdx = 0;
                                 snapshot.forEach(d => {
                                     const rawData = d.data();
-                                    const idNum = parseInt(d.id.replace(/\D/g, ''));
-                                    const pageIdx = (typeof rawData.pageIndex === 'number') ? rawData.pageIndex : (isNaN(idNum) ? 0 : idNum);
+                                    let pageIdx = -1;
+                                    if (typeof rawData.pageIndex === 'number') pageIdx = rawData.pageIndex;
+                                    else if (typeof rawData.index === 'number') pageIdx = rawData.index;
+                                    else if (typeof rawData.page_index === 'number') pageIdx = rawData.page_index;
+                                    else if (typeof rawData.pageNo === 'number') pageIdx = rawData.pageNo;
+                                    else {
+                                        const match = d.id.match(/page_?(\d+)/i) || d.id.match(/(\d+)/);
+                                        if (match) pageIdx = parseInt(match[1], 10);
+                                    }
+                                    if (pageIdx === -1) pageIdx = fallbackIdx;
+                                    fallbackIdx++;
+
                                     const parsedContent = parsePagePayload(rawData);
                                     if (parsedContent) {
                                         pagesItems.push({
@@ -4133,8 +4295,11 @@
 
                                 if (pagesItems.length > 0) {
                                     pagesItems.sort((a, b) => a.index - b.index);
-                                    finalData = pagesItems.map(p => p.content);
-                                    break;
+                                    const subPages = pagesItems.map(p => p.content);
+                                    if (subPages.length > 0) {
+                                        finalData = subPages;
+                                        break;
+                                    }
                                 }
                             }
                         } catch (err) {
@@ -4143,7 +4308,18 @@
                     }
                 }
 
-                // Check 3: If still not found, fetch main document directly
+                // Check 2: If subcollection didn't provide pages, check cachedData
+                if ((!finalData || finalData.length === 0) && cachedData) {
+                    const candidate = cachedData.pages || cachedData.pagesData || cachedData.data || cachedData.reportData;
+                    if (candidate) {
+                        const parsed = unpackPagesArray(candidate);
+                        if (parsed && parsed.length > 0) {
+                            finalData = parsed;
+                        }
+                    }
+                }
+
+                // Check 3: If still not found, fetch main document directly from Firestore
                 if ((!finalData || finalData.length === 0) && window.firebaseDB && window.firebaseGetDoc) {
                     const collectionsToTry = [targetColl, 'reports', 'monthly_reports'];
                     for (const coll of collectionsToTry) {
@@ -4151,10 +4327,14 @@
                             const docRef = window.firebaseDoc(window.firebaseDB, coll, reportId);
                             const docSnap = await window.firebaseGetDoc(docRef);
                             if (docSnap && docSnap.exists()) {
-                                const data = docSnap.data();
-                                if (data && data.pages && Array.isArray(data.pages) && data.pages.length > 0) {
-                                    finalData = data.pages.map(parsePagePayload).filter(Boolean);
-                                    break;
+                                const dData = docSnap.data();
+                                const cand = dData ? (dData.pages || dData.pagesData || dData.data || dData.reportData) : null;
+                                if (cand) {
+                                    const parsed = unpackPagesArray(cand);
+                                    if (parsed && parsed.length > 0) {
+                                        finalData = parsed;
+                                        break;
+                                    }
                                 }
                             }
                         } catch (err) {
@@ -4165,17 +4345,29 @@
 
                 if (finalData && Array.isArray(finalData) && finalData.length > 0) {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
-                    showToast('☁️ Loaded from Cloud! Rebuilding...', 'success');
-                    setTimeout(() => {
-                        window.removeEventListener('beforeunload', _beforeUnloadSave);
-                        location.reload();
-                    }, 1000);
+                    
+                    // Directly restore DOM state smoothly without full page reload
+                    restoreState(finalData);
+                    
+                    // Reset undo/redo history cleanly for the loaded document
+                    undoStack = [];
+                    redoStack = [];
+                    snapshotState();
+                    updateUndoRedoButtons();
+                    updatePageCounter();
+
+                    vibrate(30);
+                    showToast(`☁️ सभी ${finalData.length} पेज सफलतापूर्वक लोड हो गए!`, 'success', 3500);
                 } else {
                     showToast('Backup is empty or format mismatch!', 'warn');
                 }
             } catch (error) {
                 console.error("Firestore Load Error:", error);
                 showToast('Cloud Load Failed! See console.', 'error');
+            } finally {
+                setTimeout(() => {
+                    _isCloudRestoring = false;
+                }, 500);
             }
         }
 
