@@ -1855,7 +1855,8 @@
     <script type="module">
         try {
             const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
-            const { getFirestore, collection, doc, getDoc, setDoc, getDocs, query, orderBy, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+            const { getAuth, signInWithEmailAndPassword, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
+            const { initializeFirestore, getFirestore, collection, doc, getDoc, setDoc, getDocs, query, orderBy, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
 
             const firebaseConfig = {
                 apiKey: "AIzaSyDQYLPP6HDgyblCC13_wPik-LhIT6h0zr8",
@@ -1867,8 +1868,26 @@
             };
 
             const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
+            let db;
+            try {
+                db = initializeFirestore(app, {
+                    experimentalForceLongPolling: true,
+                    useFetchStreams: false
+                });
+            } catch (e) {
+                try {
+                    db = initializeFirestore(app, {
+                        experimentalAutoDetectLongPolling: true
+                    });
+                } catch (err) {
+                    db = getFirestore(app);
+                }
+            }
 
+            const auth = getAuth(app);
+
+            window.FIREBASE_CONFIG = firebaseConfig;
+            window.firebaseAuth = auth;
             window.firebaseDB = db;
             window.firebaseSetDoc = setDoc;
             window.firebaseDoc = doc;
@@ -1878,7 +1897,25 @@
             window.firebaseQuery = query;
             window.firebaseOrderBy = orderBy;
             window.firebaseDeleteDoc = deleteDoc;
-            console.log("Firebase initialized successfully");
+
+            // Auto-login with user credentials
+            const DEFAULT_EMAIL = "sathyauppolice74@gmail.com";
+            const DEFAULT_PASS = "123456";
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    console.log("Firebase Auth active:", user.email);
+                } else {
+                    try {
+                        await signInWithEmailAndPassword(auth, DEFAULT_EMAIL, DEFAULT_PASS);
+                        console.log("Firebase Auth signed in successfully");
+                    } catch (authErr) {
+                        console.warn("Firebase Auth auto-login note:", authErr.message);
+                    }
+                }
+            });
+
+            console.log("Firebase initialized successfully with Long-Polling");
         } catch (err) {
             console.warn("Firebase SDK initialization warning (offline or adblocker active):", err);
         }
@@ -2636,21 +2673,43 @@
         /* ============================================================
            IMAGE COMPRESSION UTILITY FOR STORAGE
         ============================================================ */
-        function compressImageForStorage(src, maxW = 1024, quality = 0.72) {
-            if (!src || !src.startsWith('data:image')) return Promise.resolve(src);
+        function compressImageForStorage(src, maxDim = 800, quality = 0.68) {
+            if (!src || typeof src !== 'string' || !src.startsWith('data:image')) return Promise.resolve(src);
             return new Promise(resolve => {
-                const img = new Image();
-                img.onload = () => {
-                    let w = img.naturalWidth;
-                    let h = img.naturalHeight;
-                    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-                    const cv = document.createElement('canvas');
-                    cv.width = w; cv.height = h;
-                    cv.getContext('2d').drawImage(img, 0, 0, w, h);
-                    resolve(cv.toDataURL('image/jpeg', quality));
-                };
-                img.onerror = () => resolve(src);
-                img.src = src;
+                try {
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.onload = () => {
+                        try {
+                            let w = img.naturalWidth || img.width;
+                            let h = img.naturalHeight || img.height;
+                            if (!w || !h) return resolve(src);
+
+                            if (w > maxDim || h > maxDim) {
+                                if (w > h) {
+                                    h = Math.round(h * maxDim / w);
+                                    w = maxDim;
+                                } else {
+                                    w = Math.round(w * maxDim / h);
+                                    h = maxDim;
+                                }
+                            }
+                            const cv = document.createElement('canvas');
+                            cv.width = w;
+                            cv.height = h;
+                            const ctx = cv.getContext('2d');
+                            if (!ctx) return resolve(src);
+                            ctx.drawImage(img, 0, 0, w, h);
+                            resolve(cv.toDataURL('image/jpeg', quality));
+                        } catch (e) {
+                            resolve(src);
+                        }
+                    };
+                    img.onerror = () => resolve(src);
+                    img.src = src;
+                } catch (e) {
+                    resolve(src);
+                }
             });
         }
 
@@ -2683,8 +2742,15 @@
                     if (!canvas) continue;
 
                     const pd = { type: 'photo', canvasId: canvas.id, boxes: [] };
+                    const allBoxes = Array.from(canvas.querySelectorAll('.resizable-box'));
+                    const validBoxesCount = allBoxes.filter(b => {
+                        const m = b.querySelector('img');
+                        return m && m.style.display !== 'none' && m.src && m.src !== window.location.href;
+                    }).length;
+                    const maxDim = validBoxesCount >= 5 ? 650 : (validBoxesCount >= 3 ? 750 : 850);
+                    const quality = validBoxesCount >= 5 ? 0.64 : (validBoxesCount >= 3 ? 0.68 : 0.72);
 
-                    for (const box of canvas.querySelectorAll('.resizable-box')) {
+                    for (const box of allBoxes) {
                         const img = box.querySelector('img');
                         const hasImage = img && img.style.display !== 'none' && img.src &&
                             img.src !== window.location.href &&
@@ -2693,7 +2759,12 @@
 
                         let compressed = '';
                         if (hasImage) {
-                            compressed = await compressImageForStorage(img.src);
+                            compressed = await compressImageForStorage(img.src, maxDim, quality);
+                        }
+
+                        // If compressed is smaller than current in-memory src, replace it to free memory
+                        if (compressed && img && compressed.length < img.src.length) {
+                            img.src = compressed;
                         }
 
                         pd.boxes.push({
@@ -3100,19 +3171,19 @@
                 img.onload = () => {
                     URL.revokeObjectURL(url);
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1200;
-                    const MAX_HEIGHT = 1200;
+                    const MAX_WIDTH = 1000;
+                    const MAX_HEIGHT = 1000;
                     let width = img.width;
                     let height = img.height;
 
                     if (width > height) {
                         if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
+                            height = Math.round(height * MAX_WIDTH / width);
                             width = MAX_WIDTH;
                         }
                     } else {
                         if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
+                            width = Math.round(width * MAX_HEIGHT / height);
                             height = MAX_HEIGHT;
                         }
                     }
@@ -3120,7 +3191,7 @@
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                    resolve(canvas.toDataURL('image/jpeg', 0.75));
                 };
                 img.onerror = () => {
                     URL.revokeObjectURL(url);
@@ -4046,15 +4117,26 @@
 
                 // 2. Save main document with metadata to 'reports'
                 const reportRef = window.firebaseDoc(window.firebaseDB, 'reports', reportId);
-                try {
-                    await window.firebaseSetDoc(reportRef, {
-                        updatedAt: timestamp,
-                        dateString: new Date().toLocaleString('en-IN'),
-                        totalPages: pagesData.length,
-                        pages: pagesData
-                    });
-                } catch (sizeErr) {
-                    // Fallback to metadata only if payload exceeds doc size
+                const allPagesPayload = {
+                    updatedAt: timestamp,
+                    dateString: new Date().toLocaleString('en-IN'),
+                    totalPages: pagesData.length,
+                    pages: pagesData
+                };
+
+                const mainPayloadSize = new Blob([JSON.stringify(allPagesPayload)]).size;
+                if (mainPayloadSize < 900000) {
+                    try {
+                        await window.firebaseSetDoc(reportRef, allPagesPayload);
+                    } catch (sizeErr) {
+                        // Fallback to metadata only if payload exceeds doc size
+                        await window.firebaseSetDoc(reportRef, {
+                            updatedAt: timestamp,
+                            dateString: new Date().toLocaleString('en-IN'),
+                            totalPages: pagesData.length
+                        });
+                    }
+                } else {
                     await window.firebaseSetDoc(reportRef, {
                         updatedAt: timestamp,
                         dateString: new Date().toLocaleString('en-IN'),
@@ -4062,6 +4144,41 @@
                     });
                 }
 
+                // 2. Also save each page in subcollection for backward compatibility & safety
+                for (let i = 0; i < pagesData.length; i++) {
+                    let pageData = pagesData[i];
+                    let pageDocPayload = {
+                        pageIndex: i,
+                        data: pageData
+                    };
+
+                    let pageDocSize = new Blob([JSON.stringify(pageDocPayload)]).size;
+
+                    // Safety guard: Firestore hard document limit is 1,048,576 bytes
+                    // If a page document approaches or exceeds 850KB, apply aggressive image compression
+                    if (pageDocSize > 850000 && pageData.boxes && Array.isArray(pageData.boxes)) {
+                        console.warn(`Page ${i} size (${pageDocSize} bytes) near Firestore limit. Optimizing images for cloud backup...`);
+                        for (const b of pageData.boxes) {
+                            if (b.imgSrc && b.imgSrc.startsWith('data:image')) {
+                                b.imgSrc = await compressImageForStorage(b.imgSrc, 550, 0.55);
+                            }
+                        }
+                        pageDocPayload = { pageIndex: i, data: pageData };
+                        pageDocSize = new Blob([JSON.stringify(pageDocPayload)]).size;
+                    }
+
+                    if (pageDocSize > 950000 && pageData.boxes && Array.isArray(pageData.boxes)) {
+                        for (const b of pageData.boxes) {
+                            if (b.imgSrc && b.imgSrc.startsWith('data:image')) {
+                                b.imgSrc = await compressImageForStorage(b.imgSrc, 450, 0.45);
+                            }
+                        }
+                        pageDocPayload = { pageIndex: i, data: pageData };
+                    }
+
+                    const pageRef = window.firebaseDoc(window.firebaseDB, `reports/${reportId}/pages`, `page_${i}`);
+                    await window.firebaseSetDoc(pageRef, pageDocPayload);
+                }
                 showToast('☁️ Saved to Cloud Successfully!', 'success');
             } catch (error) {
                 console.error("Firestore Backup Error:", error);
@@ -4069,8 +4186,26 @@
             }
         }
 
+        function parseFirestoreRestFields(fields) {
+            if (!fields) return {};
+            const res = {};
+            for (const [k, v] of Object.entries(fields)) {
+                if (v.stringValue !== undefined) res[k] = v.stringValue;
+                else if (v.integerValue !== undefined) res[k] = parseInt(v.integerValue);
+                else if (v.doubleValue !== undefined) res[k] = parseFloat(v.doubleValue);
+                else if (v.booleanValue !== undefined) res[k] = v.booleanValue;
+                else if (v.mapValue !== undefined) res[k] = parseFirestoreRestFields(v.mapValue.fields);
+                else if (v.arrayValue !== undefined) res[k] = (v.arrayValue.values || []).map(val => {
+                    if (val.stringValue !== undefined) return val.stringValue;
+                    if (val.mapValue !== undefined) return parseFirestoreRestFields(val.mapValue.fields);
+                    return val;
+                });
+            }
+            return res;
+        }
+
         async function openCloudLoadModal() {
-            if (!window.firebaseDB) {
+            if (!window.firebaseDB && !window.FIREBASE_CONFIG) {
                 showToast('Cloud connection unavailable (AdBlocker/Offline)', 'warn');
                 return;
             }
@@ -4083,23 +4218,11 @@
                 const backupsMap = new Map();
 
                 for (const collName of CLOUD_COLLECTIONS) {
-                    try {
-                        const reportsRef = window.firebaseCollection(window.firebaseDB, collName);
-                        const q = window.firebaseQuery(reportsRef, window.firebaseOrderBy("updatedAt", "desc"));
-                        const snapshot = await window.firebaseGetDocs(q);
-                        snapshot.forEach(docSnap => {
-                            if (!backupsMap.has(docSnap.id)) {
-                                backupsMap.set(docSnap.id, {
-                                    id: docSnap.id,
-                                    collection: collName,
-                                    data: docSnap.data()
-                                });
-                            }
-                        });
-                    } catch (err) {
+                    if (window.firebaseDB && window.firebaseCollection && window.firebaseGetDocs) {
                         try {
                             const reportsRef = window.firebaseCollection(window.firebaseDB, collName);
-                            const snapshot = await window.firebaseGetDocs(reportsRef);
+                            const q = window.firebaseQuery(reportsRef, window.firebaseOrderBy("updatedAt", "desc"));
+                            const snapshot = await window.firebaseGetDocs(q);
                             snapshot.forEach(docSnap => {
                                 if (!backupsMap.has(docSnap.id)) {
                                     backupsMap.set(docSnap.id, {
@@ -4109,9 +4232,48 @@
                                     });
                                 }
                             });
-                        } catch (e2) {
-                            console.warn(`Could not query collection "${collName}":`, e2);
+                        } catch (err) {
+                            try {
+                                const reportsRef = window.firebaseCollection(window.firebaseDB, collName);
+                                const snapshot = await window.firebaseGetDocs(reportsRef);
+                                snapshot.forEach(docSnap => {
+                                    if (!backupsMap.has(docSnap.id)) {
+                                        backupsMap.set(docSnap.id, {
+                                            id: docSnap.id,
+                                            collection: collName,
+                                            data: docSnap.data()
+                                        });
+                                    }
+                                });
+                            } catch (e2) {
+                                console.warn(`Could not query collection "${collName}":`, e2);
+                            }
                         }
+                    }
+                }
+
+                // REST API Fallback if SDK query couldn't connect or returned empty
+                if (backupsMap.size === 0 && window.FIREBASE_CONFIG) {
+                    try {
+                        for (const collName of CLOUD_COLLECTIONS) {
+                            const restUrl = `https://firestore.googleapis.com/v1/projects/${window.FIREBASE_CONFIG.projectId}/databases/(default)/documents/${collName}?key=${window.FIREBASE_CONFIG.apiKey}&pageSize=100`;
+                            const resp = await fetch(restUrl);
+                            if (resp.ok) {
+                                const data = await resp.json();
+                                (data.documents || []).forEach(doc => {
+                                    const id = doc.name.split('/').pop();
+                                    if (!backupsMap.has(id)) {
+                                        backupsMap.set(id, {
+                                            id: id,
+                                            collection: collName,
+                                            data: parseFirestoreRestFields(doc.fields)
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    } catch (restErr) {
+                        console.warn("REST fallback query error:", restErr);
                     }
                 }
 
@@ -4339,6 +4501,44 @@
                             }
                         } catch (err) {
                             console.warn(`Doc check on ${coll}/${reportId}:`, err);
+                        }
+                    }
+                }
+
+                // Check 4: REST API fallback to fetch subcollection directly
+                if ((!finalData || finalData.length === 0) && window.FIREBASE_CONFIG) {
+                    const collectionsToTry = [targetColl, 'reports', 'monthly_reports'];
+                    for (const coll of collectionsToTry) {
+                        try {
+                            const restPagesUrl = `https://firestore.googleapis.com/v1/projects/${window.FIREBASE_CONFIG.projectId}/databases/(default)/documents/${coll}/${reportId}/pages?key=${window.FIREBASE_CONFIG.apiKey}&pageSize=50`;
+                            const resp = await fetch(restPagesUrl);
+                            if (resp.ok) {
+                                const data = await resp.json();
+                                if (data.documents && data.documents.length > 0) {
+                                    let pagesItems = [];
+                                    data.documents.forEach(doc => {
+                                        const id = doc.name.split('/').pop();
+                                        const rawData = parseFirestoreRestFields(doc.fields);
+                                        const idNum = parseInt(id.replace(/\D/g, ''));
+                                        const pageIdx = (typeof rawData.pageIndex === 'number') ? rawData.pageIndex : (isNaN(idNum) ? 0 : idNum);
+                                        const parsedContent = parsePagePayload(rawData);
+                                        if (parsedContent) {
+                                            pagesItems.push({
+                                                index: pageIdx,
+                                                id: id,
+                                                content: parsedContent
+                                            });
+                                        }
+                                    });
+                                    if (pagesItems.length > 0) {
+                                        pagesItems.sort((a, b) => a.index - b.index);
+                                        finalData = pagesItems.map(p => p.content);
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (restPageErr) {
+                            console.warn("REST page fetch error:", restPageErr);
                         }
                     }
                 }
