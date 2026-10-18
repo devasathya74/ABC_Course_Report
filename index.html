@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0f172a">
     <title>25वीं वाहिनी PAC रायबरेली — रिपोर्ट एवं फोटो एडिटर</title>
-    <meta name="description" content="25वीं वाहिनी PAC रायबरेली — ABC कोर्स रिपोर्ट एवं फोटो एडिटर">
+    <meta name="description" content="25वीं वाहिनी PAC रायबरेली के लिए रिपोर्ट, फोटो लेआउट, बैकअप और PDF एडिटर">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
 
     <!-- PDF Libraries -->
@@ -37,15 +37,16 @@
         }
 
         body.theme-formal {
-            --page-border: #1e3a8a;
-            --page-bg: #f8fafc;
+            /* Official light report theme: restrained police red/blue accents */
+            --page-border: #cbd5e1;
+            --page-bg: #ffffff;
             --table-bg: #ffffff;
-            --table-border: #1e3a8a;
-            --table-header-bg: #1e3a8a;
-            --header-bg: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
-            --header-text: #f59e0b;
-            --sub-header-bg: #b45309;
-            --sub-header-border: #b45309;
+            --table-border: #1d4ed8;
+            --table-header-bg: #dbeafe;
+            --header-bg: linear-gradient(110deg, #1d4ed8 0%, #1d4ed8 49.5%, #b91c1c 50%, #b91c1c 100%);
+            --header-text: #ffffff;
+            --sub-header-bg: #1e40af;
+            --sub-header-border: #b91c1c;
             --text-color: #0f172a;
         }
 
@@ -511,7 +512,7 @@
             top: 2%;
             left: 9.2%;
             width: 82%;
-            background: linear-gradient(to bottom right, #4ea800 50%, #f42424 50%);
+            background: var(--header-bg);
             color: white;
             padding: 8px 20px;
             font-size: 35pt;
@@ -1039,7 +1040,7 @@
 
         @media print {
             @page {
-                size: 356mm 280mm;
+                size: 356mm 280mm; /* Updated dynamically from the page-size controls */
                 margin: 0;
             }
 
@@ -1083,8 +1084,8 @@
             .a4-page {
                 display: block !important;
                 box-shadow: none !important;
-                width: 356mm;
-                height: 280mm;
+                width: var(--page-width, 356mm);
+                height: var(--page-height, 280mm);
                 margin: 0 auto !important;
                 page-break-inside: avoid !important;
                 page-break-after: always !important;
@@ -1514,7 +1515,15 @@
 
         <!-- Page Size Group -->
         <div class="control-group">
-            <div class="control-group-label">Size (mm)</div>
+            <div class="control-group-label">Page Size & Print</div>
+            <div class="control-group-buttons" style="display:flex; align-items:center; gap:6px;">
+                <label for="page-size-preset" style="font-size:11px;color:#cbd5e1;">Preset</label>
+                <select id="page-size-preset" class="theme-select" aria-label="Page size preset">
+                    <option value="custom">Custom (356 × 280 mm)</option>
+                    <option value="a4-landscape">A4 Landscape (297 × 210 mm)</option>
+                    <option value="a4-portrait">A4 Portrait (210 × 297 mm)</option>
+                </select>
+            </div>
             <div class="control-group-buttons" style="display:flex; align-items:center; gap:4px;">
                 <span style="font-size:12px; color:#94a3b8;">W:</span>
                 <button class="master-btn" id="btn-width-down" style="padding:4px 8px; font-size:12px;" title="Decrease Width">-</button>
@@ -1744,7 +1753,7 @@
                     <span class="theme-select-label">🎨</span>
                     <select id="theme-selector" class="theme-select">
                         <option value="default" selected>सतरंगी (Rainbow)</option>
-                        <option value="theme-formal">प्रशासनिक (Navy/Gold)</option>
+                        <option value="theme-formal">आधिकारिक (Red/Blue)</option>
                     </select>
                 </div>
                 <div class="scale-control-container">
@@ -2075,18 +2084,50 @@
         /* ============================================================
            EVENT BINDINGS
         ============================================================ */
-        let customPageWidth = parseInt(localStorage.getItem('pageWidth')) || 356;
-        let customPageHeight = parseInt(localStorage.getItem('pageHeight')) || 280;
+        let customPageWidth = parseInt(localStorage.getItem('pageWidth'), 10) || 356;
+        let customPageHeight = parseInt(localStorage.getItem('pageHeight'), 10) || 280;
+        const pageSizePreset = document.getElementById('page-size-preset');
 
         function updatePageSizeUI() {
+            // Prevent accidental zero/negative page dimensions and extreme values.
+            customPageWidth = Math.min(600, Math.max(100, Math.round(customPageWidth)));
+            customPageHeight = Math.min(600, Math.max(100, Math.round(customPageHeight)));
             document.documentElement.style.setProperty('--page-width', customPageWidth + 'mm');
             document.documentElement.style.setProperty('--page-height', customPageHeight + 'mm');
             document.getElementById('label-width').textContent = customPageWidth;
             document.getElementById('label-height').textContent = customPageHeight;
             localStorage.setItem('pageWidth', customPageWidth);
             localStorage.setItem('pageHeight', customPageHeight);
+
+            // Browsers do not consistently support CSS variables in @page rules.
+            let printSizeStyle = document.getElementById('dynamic-print-page-size');
+            if (!printSizeStyle) {
+                printSizeStyle = document.createElement('style');
+                printSizeStyle.id = 'dynamic-print-page-size';
+                document.head.appendChild(printSizeStyle);
+            }
+            printSizeStyle.textContent = `@media print { @page { size: ${customPageWidth}mm ${customPageHeight}mm; margin: 0; } }`;
+
+            if (pageSizePreset) {
+                if (customPageWidth === 297 && customPageHeight === 210) pageSizePreset.value = 'a4-landscape';
+                else if (customPageWidth === 210 && customPageHeight === 297) pageSizePreset.value = 'a4-portrait';
+                else pageSizePreset.value = 'custom';
+            }
         }
 
+        pageSizePreset.addEventListener('change', () => {
+            const presets = {
+                'a4-landscape': [297, 210],
+                'a4-portrait': [210, 297],
+                'custom': [356, 280]
+            };
+            const chosen = presets[pageSizePreset.value];
+            if (!chosen) return;
+            customPageWidth = chosen[0];
+            customPageHeight = chosen[1];
+            updatePageSizeUI();
+            showToast(`Page size set to ${customPageWidth} × ${customPageHeight} mm`, 'success');
+        });
         document.getElementById('btn-width-down').addEventListener('click', () => { customPageWidth -= 2; updatePageSizeUI(); });
         document.getElementById('btn-width-up').addEventListener('click', () => { customPageWidth += 2; updatePageSizeUI(); });
         document.getElementById('btn-height-down').addEventListener('click', () => { customPageHeight -= 2; updatePageSizeUI(); });
@@ -2290,32 +2331,81 @@
             }
         }
 
+        function normalizeBackupPages(data) {
+            let pages = data;
+            if (pages && typeof pages === 'object' && !Array.isArray(pages)) {
+                if (Array.isArray(pages.pages)) pages = pages.pages;
+                else if (Array.isArray(pages.pagesData)) pages = pages.pagesData;
+                else if (Array.isArray(pages.reportData)) pages = pages.reportData;
+                else if (Array.isArray(pages.data)) pages = pages.data;
+                else if (pages.pages && typeof pages.pages === 'object') pages = Object.values(pages.pages);
+                else if (pages.data && typeof pages.data === 'object') pages = Object.values(pages.data);
+                else pages = Object.values(pages);
+            }
+            if (!Array.isArray(pages) || pages.length < 1 || pages.length > 200) {
+                throw new Error('Backup must contain between 1 and 200 pages.');
+            }
+            const valid = pages.every(page => {
+                if (!page || typeof page !== 'object' || Array.isArray(page)) return false;
+                const candidate = page.data && typeof page.data === 'object' ? page.data : page;
+                if (!candidate || typeof candidate !== 'object') return false;
+                if (candidate.type && !['report', 'photo'].includes(candidate.type)) return false;
+                return !!(candidate.type || candidate.contents || candidate.tableBodyHtml || candidate.boxes || candidate.images || candidate.elements || candidate.canvasId || candidate.data);
+            });
+            if (!valid) throw new Error('Backup structure is not recognized. Current report was not changed.');
+            return pages;
+        }
+
+        function sanitizeImportedHTML(html) {
+            // IMPORTANT: use a template fragment, not DOMParser.body. Saved tableBodyHtml
+            // contains bare <tr> elements; parsing those as a full document body can make
+            // browsers discard the rows before they are restored into the real <tbody>.
+            // A template preserves fragments such as <tr>, <td>, <br>, and inline formatting.
+            const template = document.createElement('template');
+            template.innerHTML = String(html || '');
+            const fragment = template.content;
+            fragment.querySelectorAll('script, iframe, object, embed, form, input, button, link, meta, base').forEach(el => el.remove());
+            fragment.querySelectorAll('*').forEach(el => {
+                Array.from(el.attributes).forEach(attr => {
+                    const name = attr.name.toLowerCase();
+                    const value = attr.value.trim().toLowerCase();
+                    if (name.startsWith('on') || name === 'srcdoc' ||
+                        ((name === 'href' || name === 'src' || name === 'xlink:href') &&
+                         (value.startsWith('javascript:') || value.startsWith('vbscript:') || value.startsWith('data:text/html')))) {
+                        el.removeAttribute(attr.name);
+                    }
+                });
+            });
+            return template.innerHTML;
+        }
+
         function importJSONBackup(file) {
             if (!file) return;
+            if (file.size > 25 * 1024 * 1024) {
+                showToast('❌ Backup file is larger than 25 MB.', 'error', 5000);
+                return;
+            }
             const reader = new FileReader();
             reader.onload = function (e) {
                 try {
-                    let data = JSON.parse(e.target.result);
-                    if (data && typeof data === 'object' && !Array.isArray(data)) {
-                        if (Array.isArray(data.pages)) data = data.pages;
-                        else if (Array.isArray(data.pagesData)) data = data.pagesData;
-                        else if (Array.isArray(data.data)) data = data.data;
-                        else if (Array.isArray(data.reportData)) data = data.reportData;
-                        else if (data.pages && typeof data.pages === 'object') data = Object.values(data.pages);
-                        else data = Object.values(data);
+                    const parsed = JSON.parse(e.target.result);
+                    const data = normalizeBackupPages(parsed);
+                    // Preserve a recovery copy before replacing the current document.
+                    try {
+                        const current = localStorage.getItem(STORAGE_KEY);
+                        if (current) localStorage.setItem(STORAGE_KEY + '_pre_import_recovery', current);
+                    } catch (storageErr) {
+                        console.warn('Could not create pre-import recovery copy:', storageErr);
                     }
-                    if (!Array.isArray(data) || data.length === 0) {
-                        showToast('❌ अमान्य बैकअप फ़ाइल!', 'error', 4000);
-                        return;
+                    const success = restoreState(data);
+                    if (!success) throw new Error('Backup could not be restored. Current report may be unchanged.');
+                    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+                    catch (storageErr) {
+                        showToast('⚠️ Report loaded, but browser storage is full. Export a JSON backup.', 'warn', 6000);
                     }
                     snapshotState();
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                    const success = restoreState(data);
-                    if (success) {
-                        showToast(`📂 JSON बैकअप सफलतापूर्वक रीस्टोर हुआ (${data.length} पेज)!`, 'success', 4000);
-                    } else {
-                        showToast('⚠️ बैकअप लोड करने में समस्या आई', 'warn', 4000);
-                    }
+                    triggerAutoSave();
+                    showToast(`📂 JSON backup restored (${data.length} pages).`, 'success', 4000);
                 } catch (err) {
                     console.error('JSON Import Error:', err);
                     showToast('❌ JSON फ़ाइल पढ़ने में त्रुटि!', 'error', 4000);
@@ -2499,7 +2589,7 @@
         let isAutoFitMode = true;
 
         function calculateAutoFitScale() {
-            const pageWidthPx = customPageWidth * 3.78; // 356mm * 3.78 ≈ 1345px
+            const pageWidthPx = customPageWidth * 3.7795275591; // CSS px per mm
             const screenW = window.innerWidth;
             const padding = screenW <= 768 ? 16 : 60;
             const usableW = screenW - padding;
@@ -2536,12 +2626,12 @@
            DYNAMIC THEMES CONTROLLER
         ============================================================ */
         function setTheme(themeName) {
-            document.body.className = '';
-            if (themeName !== 'default') {
-                document.body.classList.add(themeName);
-            }
-            themeSelector.value = themeName;
-            localStorage.setItem(THEME_STORAGE_KEY, themeName);
+            // Only manage theme classes. Never erase application/export state classes.
+            document.body.classList.remove('theme-formal');
+            if (themeName === 'theme-formal') document.body.classList.add('theme-formal');
+            if (themeSelector) themeSelector.value = themeName === 'theme-formal' ? themeName : 'default';
+            try { localStorage.setItem(THEME_STORAGE_KEY, themeName === 'theme-formal' ? themeName : 'default'); }
+            catch (err) { console.warn('Theme preference could not be saved:', err); }
         }
 
         /* ============================================================
@@ -2943,7 +3033,7 @@
                 const tbody = reportInner ? reportInner.querySelector('table tbody') : null;
 
                 if (reportData.tableBodyHtml && tbody) {
-                    tbody.innerHTML = reportData.tableBodyHtml;
+                    tbody.innerHTML = sanitizeImportedHTML(reportData.tableBodyHtml);
                 }
 
                 const contents = reportData.contents || reportData;
@@ -2951,7 +3041,7 @@
                     Object.keys(contents).forEach((key) => {
                         const targetEl = reportInner.querySelector(`[data-save-id="${key}"]`);
                         if (targetEl && typeof contents[key] === 'string') {
-                            targetEl.innerHTML = contents[key];
+                            targetEl.innerHTML = sanitizeImportedHTML(contents[key]);
                         }
                     });
                 }
@@ -3040,9 +3130,12 @@
                 return;
             }
 
-            // Automatically backup to Firestore before generating PDF
+            // Persist locally before rendering. Cloud backup is awaited when available,
+            // but a cloud failure must never block a local PDF export.
+            try { await saveAllData(true); } catch (saveErr) { console.warn('Local save before PDF failed:', saveErr); }
             if (window.firebaseDB && typeof backupToFirestore === 'function') {
-                backupToFirestore().catch(e => console.error("Auto backup failed:", e));
+                try { await backupToFirestore(); }
+                catch (e) { console.error('Auto backup failed:', e); showToast('Cloud backup failed; continuing with PDF export.', 'warn', 4500); }
             }
 
             const btn = document.getElementById('btn-pdf');
@@ -3107,6 +3200,8 @@
                 wrapper.style.transform = `scale(${previousScale})`;
                 showToast('❌ PDF नहीं बन सका।', 'error', 6000);
             } finally {
+                document.body.classList.remove('pdf-export-mode');
+                wrapper.style.transform = `scale(${previousScale})`;
                 btn.disabled = false;
                 btn.innerHTML = originalText;
             }
