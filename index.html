@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
     <title>25वीं वाहिनी PAC रायबरेली — रिपोर्ट एवं फोटो एडिटर</title>
     <meta name="description" content="25वीं वाहिनी PAC रायबरेली के लिए रिपोर्ट, फोटो लेआउट, बैकअप और PDF एडिटर">
@@ -736,6 +736,12 @@
             box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
         }
 
+        .box-lock-btn { position:absolute; top:-16px; left:60px; width:34px; height:34px; border:2px solid #fff; border-radius:50%; background:#059669; color:#fff; z-index:115; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 3px 8px #0005; font-size:15px; touch-action:manipulation; }
+        .resizable-box.is-locked { border:2px solid #10b981 !important; outline:none !important; box-shadow:0 0 0 2px #10b98155 !important; }
+        .resizable-box.is-locked .move-handle { background:#065f46; cursor:not-allowed; }
+        .resizable-box.is-locked .resizer, .resizable-box.is-locked .delete-btn, .resizable-box.is-locked .rotate-btn, .resizable-box.is-locked .fit-btn, .resizable-box.is-locked .manual-move-btn { display:none !important; }
+        .resizable-box.is-locked .box-lock-btn { background:#b45309; }
+
         /* Delete Button */
         .delete-btn {
             position: absolute;
@@ -836,7 +842,8 @@
         .resizable-box:not(.selected-box) .move-handle,
         .resizable-box:not(.selected-box) .delete-btn,
         .resizable-box:not(.selected-box) .rotate-btn,
-        .resizable-box:not(.selected-box) .fit-btn {
+        .resizable-box:not(.selected-box) .fit-btn,
+        .resizable-box:not(.selected-box) .box-lock-btn {
             display: none !important;
         }
 
@@ -1373,11 +1380,13 @@
         }
 
         .mobile-zoom-widget {
-            display: none;
+            display: flex;
             position: fixed;
-            top: 12px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: auto;
+            bottom: 18px;
+            right: 18px;
+            left: auto;
+            transform: none;
             z-index: 4800;
             background: rgba(15, 23, 42, 0.92);
             backdrop-filter: blur(10px);
@@ -1406,6 +1415,23 @@
         .mobile-zoom-btn:active {
             background: #38bdf8;
             color: #0f172a;
+        }
+
+        .zoom-fit-primary {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: #fff;
+            padding: 8px 12px;
+            border: 1px solid rgba(167, 243, 208, .6);
+        }
+        .zoom-step-primary {
+            background: #1d4ed8;
+            color: #fff;
+            min-width: 66px;
+            padding: 8px 10px;
+        }
+        .mobile-zoom-widget #zoom-sensitivity { cursor: ew-resize; }
+        @media (min-width: 769px) {
+            .mobile-zoom-widget { flex-wrap: wrap; max-width: min(680px, calc(100vw - 36px)); }
         }
 
         @media (max-width: 768px) {
@@ -1495,10 +1521,11 @@
 
             .mobile-bottom-bar {
                 display: flex;
-                height: calc(62px + env(safe-area-inset-bottom));
+                height: calc(66px + env(safe-area-inset-bottom));
                 padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
                 gap: 2px;
                 justify-content: space-evenly;
+                overflow-x: auto;
             }
             .mobile-action-btn {
                 flex: 1 1 0;
@@ -1512,11 +1539,17 @@
 
             .mobile-zoom-widget {
                 top: calc(8px + env(safe-area-inset-top));
+                bottom: auto;
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%);
                 gap: 4px;
                 padding: 4px 7px;
                 max-width: calc(100vw - 112px);
             }
             .mobile-zoom-btn { min-width: 34px; min-height: 34px; padding: 5px 8px; font-size: 12px; }
+            .zoom-step-primary { min-width: 58px; }
+            .zoom-fit-primary { padding: 6px 8px; }
             #m-zoom-label { min-width: 34px; text-align: center; }
 
             .hover-trigger { display: none !important; }
@@ -1546,11 +1579,12 @@
 
     <!-- Floating Mobile Zoom Widget -->
     <div class="mobile-zoom-widget" id="mobile-zoom-widget">
-        <button class="mobile-zoom-btn" id="m-zoom-fit">📱 Fit</button>
-        <button class="mobile-zoom-btn" id="m-zoom-100">100%</button>
-        <button class="mobile-zoom-btn" id="m-zoom-out">-</button>
+        <button class="mobile-zoom-btn zoom-fit-primary" id="m-zoom-fit" title="Fit page to screen">⛶ Fit to Screen</button>
+        <button class="mobile-zoom-btn" id="m-zoom-100" title="Set zoom to 100%">100%</button>
+        <button class="mobile-zoom-btn zoom-step-primary" id="m-zoom-out" aria-label="Zoom out" title="Zoom out by selected step">− Zoom</button>
         <span id="m-zoom-label" style="font-size: 11px; font-weight: 800; color: #38bdf8;">70%</span>
-        <button class="mobile-zoom-btn" id="m-zoom-in">+</button>
+        <button class="mobile-zoom-btn zoom-step-primary" id="m-zoom-in" aria-label="Zoom in" title="Zoom in by selected step">+ Zoom</button>
+        <label for="zoom-sensitivity" style="display:flex;align-items:center;gap:4px;color:#e2e8f0;font-size:10px;white-space:nowrap">Step <input id="zoom-sensitivity" type="range" min="2" max="20" step="1" value="5" style="width:58px;accent-color:#38bdf8"><span id="zoom-step-label">5%</span></label>
     </div>
 
     <!-- Hamburger Menus -->
@@ -1929,6 +1963,8 @@
 
     <!-- Mobile Bottom Action Bar -->
     <div class="mobile-bottom-bar" id="mobile-bottom-bar">
+        <button class="mobile-action-btn" id="m-btn-undo" title="Undo" aria-label="Undo"><span class="btn-icon">↶</span><span>Undo</span></button>
+        <button class="mobile-action-btn" id="m-btn-redo" title="Redo" aria-label="Redo"><span class="btn-icon">↷</span><span>Redo</span></button>
         <button class="mobile-action-btn" id="m-btn-page" title="New Photo Page">
             <span class="btn-icon">📄</span>
             <span>+पेज</span>
@@ -2054,6 +2090,7 @@
         let redoStack = [];
         const MAX_HISTORY = 15;
         let currentScale = 0.7;
+        let zoomStep = 0.05;
 
         // Undo Image Cache to save base64 memory duplicate in undo/redo actions
         const undoImageCache = new Map();
@@ -2319,8 +2356,8 @@
         });
 
         // Scaler mechanisms (Screen editor zoom)
-        document.getElementById('btn-scale-up').addEventListener('click', () => adjustWorkspaceScale(0.05));
-        document.getElementById('btn-scale-down').addEventListener('click', () => adjustWorkspaceScale(-0.05));
+        document.getElementById('btn-scale-up').addEventListener('click', () => adjustWorkspaceScale(1));
+        document.getElementById('btn-scale-down').addEventListener('click', () => adjustWorkspaceScale(-1));
 
         // Multi-image upload button
         document.getElementById('btn-multi-upload').addEventListener('click', () => {
@@ -2684,6 +2721,7 @@
            WORKSPACE SCALING (ZOOM & MOBILE AUTO-FIT) CONTROL
         ============================================================ */
         let isAutoFitMode = true;
+        let userHasManuallyZoomed = false;
 
         function calculateAutoFitScale() {
             const pageWidthPx = customPageWidth * 3.7795275591; // CSS px per mm
@@ -2698,6 +2736,7 @@
 
         function applyAutoFit() {
             isAutoFitMode = true;
+            userHasManuallyZoomed = false;
             currentScale = calculateAutoFitScale();
             wrapper.style.transformOrigin = window.innerWidth <= 768 ? 'top center' : 'top center';
             wrapper.style.transform = `scale(${currentScale})`;
@@ -2714,7 +2753,8 @@
 
         function adjustWorkspaceScale(delta) {
             isAutoFitMode = false;
-            currentScale = Math.min(1.5, Math.max(0.2, currentScale + delta));
+            userHasManuallyZoomed = true;
+            currentScale = Math.min(2.0, Math.max(0.15, currentScale + (delta > 0 ? zoomStep : -zoomStep)));
             wrapper.style.transform = `scale(${currentScale})`;
             updateZoomIndicators();
         }
@@ -2963,7 +3003,8 @@
                             imgY: img ? (img.dataset.y || '0') : '0',
                             imgScale: img ? (img.dataset.scale || '1') : '1',
                             imgRotation: img ? (img.dataset.rotation || '0') : '0',
-                            imgTransform: img ? (img.style.transform || '') : ''
+                            imgTransform: img ? (img.style.transform || '') : '',
+                            locked: box.classList.contains('is-locked')
                         });
                     }
                     pagesData.push(pd);
@@ -3061,7 +3102,8 @@
                         imgY: img ? (img.dataset.y || '0') : '0',
                         imgScale: img ? (img.dataset.scale || '1') : '1',
                         imgRotation: img ? (img.dataset.rotation || '0') : '0',
-                        imgTransform: img ? (img.style.transform || '') : ''
+                        imgTransform: img ? (img.style.transform || '') : '',
+                        locked: box.classList.contains('is-locked')
                     });
                 }
                 pagesData.push(pd);
@@ -3738,7 +3780,8 @@
             }
 
             box.innerHTML = `
-                <div class="move-handle" title="डिब्बे को खिसकाने के लिए खींचें">⠿⠿ DRAG TO MOVE ⠿⠿</div>
+                <div class="move-handle" title="केवल इस handle को खींचकर डिब्बा खिसकाएँ">⠿⠿ DRAG TO MOVE ⠿⠿</div>
+                <button type="button" class="box-lock-btn" title="लॉक/अनलॉक" aria-label="लॉक/अनलॉक">🔓</button>
                 <div class="delete-btn"  title="हटाएं (Del key)">✕</div>
                 <div class="rotate-btn"  title="90° घुमाएं (R key)">↻</div>
                 <div class="fit-btn"     title="चित्र रीसेट/फिट">🔲</div>
@@ -3764,6 +3807,19 @@
 
             const img = box.querySelector('img');
             const label = box.querySelector('.upload-label');
+            const lockBtn = box.querySelector('.box-lock-btn');
+            function setBoxLocked(locked, persist = true) {
+                box.classList.toggle('is-locked', !!locked);
+                box.dataset.locked = locked ? 'true' : 'false';
+                if (lockBtn) { lockBtn.textContent = locked ? '🔒' : '🔓'; lockBtn.title = locked ? 'अनलॉक करके संपादन करें' : 'फोटो बॉक्स लॉक करें'; }
+                if (persist) triggerAutoSave();
+            }
+            setBoxLocked(!!data.locked, false);
+            if (lockBtn) lockBtn.addEventListener('click', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                snapshotState(); setBoxLocked(!box.classList.contains('is-locked'));
+                showToast(box.classList.contains('is-locked') ? '🔒 फोटो बॉक्स लॉक है' : '🔓 फोटो बॉक्स अनलॉक है', 'info', 1400);
+            });
             const input = box.querySelector('input[type=file]');
 
             if (hasImg) {
@@ -3774,6 +3830,7 @@
             }
 
             input.addEventListener('change', () => {
+                if (box.classList.contains('is-locked')) { input.value = ''; showToast('🔒 पहले फोटो बॉक्स अनलॉक करें', 'warn', 1600); return; }
                 if (!input.files[0]) return;
                 loadFileIntoBox(input.files[0], img, label, box, canvasId);
             });
@@ -3811,49 +3868,50 @@
             });
 
             box.querySelector('.delete-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); if (box.classList.contains('is-locked')) return;
                 vibrate(25);
                 deleteBox(box, canvasId);
             });
 
             box.querySelector('.rotate-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); if (box.classList.contains('is-locked')) return;
                 vibrate(20);
                 rotateImage(img);
             });
 
             box.querySelector('.fit-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); if (box.classList.contains('is-locked')) return;
                 vibrate(20);
                 fitImageToBox(img);
             });
 
             const MOVE_STEP = 5;
             box.querySelector('.move-up').addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); if (box.classList.contains('is-locked')) return;
                 snapshotState();
                 box.style.top = (parseFloat(box.style.top) || 0) - MOVE_STEP + 'px';
                 triggerAutoSave();
             });
             box.querySelector('.move-down').addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); if (box.classList.contains('is-locked')) return;
                 snapshotState();
                 box.style.top = (parseFloat(box.style.top) || 0) + MOVE_STEP + 'px';
                 triggerAutoSave();
             });
             box.querySelector('.move-left').addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); if (box.classList.contains('is-locked')) return;
                 snapshotState();
                 box.style.left = (parseFloat(box.style.left) || 0) - MOVE_STEP + 'px';
                 triggerAutoSave();
             });
             box.querySelector('.move-right').addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); if (box.classList.contains('is-locked')) return;
                 snapshotState();
                 box.style.left = (parseFloat(box.style.left) || 0) + MOVE_STEP + 'px';
                 triggerAutoSave();
             });
 
+            box.addEventListener('click', (e) => { if (box.classList.contains('is-locked') && !e.target.closest('.box-lock-btn')) { e.stopPropagation(); if (e.target.closest('.upload-label')) { e.preventDefault(); showToast('🔒 पहले फोटो बॉक्स अनलॉक करें', 'warn', 1600); } } }, true);
             box.addEventListener('mousedown', (e) => selectBox(box));
             box.addEventListener('touchstart', (e) => selectBox(box));
             box.addEventListener('paste', (e) => handleBoxPaste(e, img, label, box, canvasId));
@@ -4000,6 +4058,7 @@
             let initialLeft = 0, initialTop = 0;
 
             function handleStart(e) {
+                if (el.classList.contains('is-locked')) return;
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
 
                 const target = e.target;
@@ -4013,6 +4072,8 @@
                 }
 
                 const isHandle = !!target.closest('.move-handle');
+                // Avoid accidental relocation while scrolling/tapping: movement starts only from the explicit handle.
+                if (!isHandle) { selectBox(el); return; }
 
                 selectBox(el);
                 isDragging = true;
@@ -4076,6 +4137,7 @@
         function makeResizable(el) {
             el.querySelectorAll('.resizer').forEach(resizer => {
                 function handleStart(e) {
+                    if (el.classList.contains('is-locked')) return;
                     e.preventDefault();
                     e.stopPropagation();
 
@@ -4156,6 +4218,22 @@
             // Pinch/scroll zoom and pan disabled on user request
         }
 
+
+        // Lock browser/page zoom gestures. Workspace zoom is available only through explicit buttons.
+        document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
+        document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
+        document.addEventListener('gestureend', e => e.preventDefault(), { passive: false });
+        document.addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) e.preventDefault(); }, { passive: false });
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && ['+', '=', '-', '0'].includes(e.key)) e.preventDefault();
+        }, { capture: true });
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', e => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 280) e.preventDefault();
+            lastTouchEnd = now;
+        }, { passive: false });
+
         /* ============================================================
            DATE INJECTION UTILITY
         ============================================================ */
@@ -4191,6 +4269,15 @@
         /* ============================================================
            MOBILE ACTIONS & GESTURES ENGINE
         ============================================================ */
+        const zoomSensitivity = document.getElementById('zoom-sensitivity');
+        const zoomStepLabel = document.getElementById('zoom-step-label');
+        try { zoomStep = Math.max(0.02, Math.min(0.20, Number(localStorage.getItem('pac_zoom_step')) || 0.05)); } catch (_) {}
+        if (zoomSensitivity) { zoomSensitivity.value = String(Math.round(zoomStep * 100)); if (zoomStepLabel) zoomStepLabel.textContent = `${Math.round(zoomStep * 100)}%`; zoomSensitivity.addEventListener('input', () => { zoomStep = Number(zoomSensitivity.value) / 100; if (zoomStepLabel) zoomStepLabel.textContent = `${zoomSensitivity.value}%`; try { localStorage.setItem('pac_zoom_step', String(zoomStep)); } catch (_) {} }); }
+        const mobileUndo = document.getElementById('m-btn-undo');
+        const mobileRedo = document.getElementById('m-btn-redo');
+        if (mobileUndo) mobileUndo.addEventListener('click', () => { vibrate(15); undo(); });
+        if (mobileRedo) mobileRedo.addEventListener('click', () => { vibrate(15); redo(); });
+
         const mBtnPage = document.getElementById('m-btn-page');
         if (mBtnPage) mBtnPage.addEventListener('click', () => { vibrate(25); addPhotoPage(); });
 
@@ -4216,15 +4303,15 @@
         if (mZoom100) mZoom100.addEventListener('click', () => { vibrate(20); isAutoFitMode = false; currentScale = 1.0; wrapper.style.transform = 'scale(1.0)'; updateZoomIndicators(); });
 
         const mZoomIn = document.getElementById('m-zoom-in');
-        if (mZoomIn) mZoomIn.addEventListener('click', () => { vibrate(15); adjustWorkspaceScale(0.08); });
+        if (mZoomIn) mZoomIn.addEventListener('click', () => { vibrate(15); adjustWorkspaceScale(1); });
 
         const mZoomOut = document.getElementById('m-zoom-out');
-        if (mZoomOut) mZoomOut.addEventListener('click', () => { vibrate(15); adjustWorkspaceScale(-0.08); });
+        if (mZoomOut) mZoomOut.addEventListener('click', () => { vibrate(15); adjustWorkspaceScale(-1); });
 
         // Screen Resize & Orientation Change Auto-Fit Handler
         let resizeFitTimer = null;
         window.addEventListener('resize', () => {
-            if (isAutoFitMode) {
+            if (isAutoFitMode && !userHasManuallyZoomed) {
                 clearTimeout(resizeFitTimer);
                 resizeFitTimer = setTimeout(applyAutoFit, 120);
             }
@@ -4233,28 +4320,7 @@
             if (isAutoFitMode) setTimeout(applyAutoFit, 250);
         }, { passive: true });
 
-        // Double-Tap Workspace to Toggle Zoom (Fit <-> 100%)
-        let lastTapTime = 0;
-        const workspaceContainer = document.querySelector('.workspace-container');
-        if (workspaceContainer) {
-            workspaceContainer.addEventListener('touchend', (e) => {
-                if (e.target.closest('.resizable-box') || e.target.closest('[contenteditable="true"]') || e.target.closest('button')) return;
-                const now = Date.now();
-                if (now - lastTapTime < 300) {
-                    e.preventDefault();
-                    vibrate(30);
-                    if (Math.abs(currentScale - 1.0) < 0.05) {
-                        applyAutoFit();
-                    } else {
-                        isAutoFitMode = false;
-                        currentScale = 1.0;
-                        wrapper.style.transform = 'scale(1.0)';
-                        updateZoomIndicators();
-                    }
-                }
-                lastTapTime = now;
-            });
-        }
+        // Zoom is intentionally controlled only by the visible zoom buttons.
 
         /* ============================================================
            INITIALIZATION
@@ -4266,7 +4332,8 @@
             if (firstPage) selectPage(firstPage);
             updatePageCounter();
 
-            injectCurrentDate(loaded);
+            // Preserve saved report dates/content. Inject today only into a fresh/placeholder report.
+            injectCurrentDate(true);
 
             snapshotState();
         });
